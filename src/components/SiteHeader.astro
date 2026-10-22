@@ -6,7 +6,7 @@ import { t, type Key, type Lang } from '../i18n';
 
 interface Props {
   lang: Lang;
-  current?: 'changelog' | 'about';
+  current?: 'examples' | 'changelog' | 'about';
 }
 
 const { lang, current } = Astro.props;
@@ -14,6 +14,7 @@ const { lang, current } = Astro.props;
 const links: { id: string; href: string; key: Key }[] = [
   { id: 'collection', href: `/${lang}/`, key: 'nav.collection.short' },
   { id: 'docs', href: `/${lang}/docs/${sdks[0].package}/`, key: 'nav.docs.short' },
+  { id: 'examples', href: `/${lang}/examples/`, key: 'nav.examples' },
   { id: 'changelog', href: `/${lang}/changelog/`, key: 'nav.changelog' },
   { id: 'about', href: `/${lang}/about/`, key: 'nav.about' },
 ];

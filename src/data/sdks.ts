@@ -27,6 +27,8 @@ export type Sdk = {
   coverage?: { api: string; endpoints: string; spec: string; source: string };
   /** Заметки об API, когда публичной спецификации нет. */
   apiNotes?: string;
+  /** Папка примеров от корня репозитория; общую папку делят по подстроке в имени файла. */
+  examples?: { dir: string; only?: string; skip?: string };
 };
 
 export const sdks: readonly Sdk[] = [
@@ -55,6 +57,7 @@ export const sdks: readonly Sdk[] = [
       { name: 'client.episodes.get(id)', description: { ru: 'Эпизод с HLS-ссылками (hls_1080, hls_720).', en: 'An episode with HLS links (hls_1080, hls_720).' } },
     ],
     coverage: { api: 'AniLibria API v1', endpoints: 'docs/endpoints.md', spec: 'spec/openapi.json', source: 'src/aniliberty' },
+    examples: { dir: 'examples' },
   },
   {
     number: 'II',
@@ -71,6 +74,7 @@ export const sdks: readonly Sdk[] = [
     github: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/tree/main/packages/ranobelib',
     repo: { url: 'https://github.com/LLIJIYAPNIK/libsocial-sdk.git', dir: 'libsocial-sdk', path: 'packages/ranobelib' },
     apiNotes: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/blob/main/docs/api-notes.md',
+    examples: { dir: 'examples', skip: 'mangalib' },
   },
   {
     number: 'III',
@@ -87,6 +91,7 @@ export const sdks: readonly Sdk[] = [
     github: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/tree/main/packages/mangalib',
     repo: { url: 'https://github.com/LLIJIYAPNIK/libsocial-sdk.git', dir: 'libsocial-sdk', path: 'packages/mangalib' },
     apiNotes: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/blob/main/docs/api-notes.md',
+    examples: { dir: 'examples', only: 'mangalib' },
   },
 ];
 

@@ -1,0 +1,50 @@
+// Карточки страницы примеров: названия на двух языках и короткая строка API — из макета.
+// Сами примеры (список файлов, пометка «аккаунт») берутся из папки examples/ репозитория SDK;
+// у файла без записи здесь название строится из имени, а строка API — из README примеров.
+
+export type ExampleCopy = { title: { ru: string; en: string }; api: string };
+
+/** Ключ — `<каталог репозитория>/<файл>`, как в .sdk/. */
+export const exampleCopy: Record<string, ExampleCopy> = {
+  'py-aniliberty/01_quickstart.py': { title: { ru: 'Быстрый старт', en: 'Quick start' }, api: 'AniLiberty, app.status(), first releases' },
+  'py-aniliberty/02_latest_and_random_releases.py': { title: { ru: 'Последние и случайные релизы', en: 'Latest and random releases' }, api: 'releases.latest() / random() / recommended()' },
+  'py-aniliberty/03_release_details.py': { title: { ru: 'Подробности релиза', en: 'Release details' }, api: 'releases.get(), members(), list() / iter_list()' },
+  'py-aniliberty/04_episodes_and_hls_links.py': { title: { ru: 'Эпизоды и HLS-ссылки', en: 'Episodes and HLS links' }, api: 'episodes.get(), NotFoundError' },
+  'py-aniliberty/05_quick_search.py': { title: { ru: 'Быстрый поиск', en: 'Quick search' }, api: 'app.search_releases()' },
+  'py-aniliberty/06_catalog_filters.py': { title: { ru: 'Фильтры каталога', en: 'Catalog filters' }, api: 'catalog.releases()' },
+  'py-aniliberty/07_catalog_pagination.py': { title: { ru: 'Пагинация каталога', en: 'Catalog pagination' }, api: 'Page, iter_releases()' },
+  'py-aniliberty/08_catalog_references.py': { title: { ru: 'Справочники каталога', en: 'Catalog references' }, api: 'catalog.references.*()' },
+  'py-aniliberty/09_schedule.py': { title: { ru: 'Расписание', en: 'Schedule' }, api: 'schedule.now() / week()' },
+  'py-aniliberty/10_genres.py': { title: { ru: 'Жанры', en: 'Genres' }, api: 'genres.list() / get() / random() / releases()' },
+  'py-aniliberty/11_franchises.py': { title: { ru: 'Франшизы', en: 'Franchises' }, api: 'franchises.list() / get() / for_release() / random()' },
+  'py-aniliberty/12_torrents_and_download.py': { title: { ru: 'Торренты и загрузка', en: 'Torrents and download' }, api: 'torrents.for_release() / file() / download() / rss()' },
+  'py-aniliberty/13_concurrency_gather.py': { title: { ru: 'Параллельные запросы', en: 'Concurrency' }, api: 'asyncio.gather, TaskGroup, max_concurrency' },
+  'py-aniliberty/14_error_handling.py': { title: { ru: 'Обработка ошибок', en: 'Error handling' }, api: 'exception hierarchy, automatic retries' },
+  'py-aniliberty/15_custom_http_client_and_mirrors.py': { title: { ru: 'Свой HTTP-клиент и зеркала', en: 'Custom HTTP client and mirrors' }, api: 'base_url, httpx.AsyncClient, headers=' },
+  'py-aniliberty/16_teams.py': { title: { ru: 'Команды', en: 'Teams' }, api: 'teams.list() / roles() / users()' },
+  'py-aniliberty/17_media.py': { title: { ru: 'Медиа', en: 'Media' }, api: 'media.promotions() / videos()' },
+  'py-aniliberty/18_authentication.py': { title: { ru: 'Авторизация', en: 'Authentication' }, api: 'auth.login() / logout(), me.profile()' },
+  'py-aniliberty/19_otp_device_login.py': { title: { ru: 'Вход по одноразовому коду', en: 'One-time code login' }, api: 'auth.otp.issue() / accept() / login()' },
+  'py-aniliberty/20_favorites.py': { title: { ru: 'Избранное', en: 'Favorites' }, api: 'me.favorites.add() / remove() / releases()' },
+  'py-aniliberty/21_collections.py': { title: { ru: 'Коллекции', en: 'Collections' }, api: 'me.collections.add() / remove() / releases()' },
+  'py-aniliberty/22_watch_progress.py': { title: { ru: 'Прогресс просмотра', en: 'Watch progress' }, api: 'me.views.*, episodes.timecode()' },
+  'py-aniliberty/23_release_ratings.py': { title: { ru: 'Оценки релизов', en: 'Release ratings' }, api: 'releases.ratings.get() / set() / remove()' },
+  'py-aniliberty/24_response_cache.py': { title: { ru: 'Кэш ответов', en: 'Response cache' }, api: 'AniLiberty(cache_dir=..., cache_ttl=...)' },
+  'libsocial-sdk/01_title_metadata.py': { title: { ru: 'Метаданные тайтла', en: 'Title metadata' }, api: 'get_info()' },
+  'libsocial-sdk/02_table_of_contents.py': { title: { ru: 'Оглавление', en: 'Table of contents' }, api: 'get_table_of_contents()' },
+  'libsocial-sdk/03_single_chapter.py': { title: { ru: 'Одна глава', en: 'A single chapter' }, api: 'get_chapter()' },
+  'libsocial-sdk/04_multiple_chapters.py': { title: { ru: 'Несколько глав', en: 'Several chapters' }, api: 'get_chapters()' },
+  'libsocial-sdk/05_single_volume.py': { title: { ru: 'Один том', en: 'A single volume' }, api: 'get_volume()' },
+  'libsocial-sdk/06_multiple_volumes.py': { title: { ru: 'Несколько томов', en: 'Several volumes' }, api: 'get_volumes()' },
+  'libsocial-sdk/07_translation_selection.py': { title: { ru: 'Выбор перевода', en: 'Choosing a translation' }, api: 'get_translations(), branch_id' },
+  'libsocial-sdk/08_download_title.py': { title: { ru: 'Загрузка тайтла целиком', en: 'Downloading a whole title' }, api: 'download_title()' },
+  'libsocial-sdk/09_disk_caching.py': { title: { ru: 'Кэш на диске', en: 'Disk cache' }, api: 'refresh=True, cache_stats(), clear_cache()' },
+  'libsocial-sdk/10_export_formats.py': { title: { ru: 'Форматы экспорта', en: 'Export formats' }, api: 'export() → txt / fb2 / epub / pdf' },
+  'libsocial-sdk/11_error_handling.py': { title: { ru: 'Обработка ошибок', en: 'Error handling' }, api: 'TitleNotFoundError, ChapterNotFoundError, AccessBlockedError' },
+  'libsocial-sdk/12_catalog_listing.py': { title: { ru: 'Каталог', en: 'Browsing the catalog' }, api: 'Catalog.list_titles()' },
+  'libsocial-sdk/13_chapter_footnotes.py': { title: { ru: 'Сноски переводчика', en: 'Translator footnotes' }, api: 'Chapter.footnotes' },
+  'libsocial-sdk/14_chapter_images.py': { title: { ru: 'Изображения главы', en: 'Chapter images' }, api: 'chapter_image_urls(), rewrite_image_urls()' },
+  'libsocial-sdk/15_chapter_paragraphs.py': { title: { ru: 'Абзацы главы', en: 'Chapter paragraphs' }, api: 'chapter_paragraphs()' },
+  'libsocial-sdk/16_mangalib_pages.py': { title: { ru: 'Страницы главы', en: 'Chapter pages' }, api: 'pages, image servers, closed chapters' },
+  'libsocial-sdk/17_mangalib_export.py': { title: { ru: 'Экспорт в CBZ и PDF', en: 'Export to CBZ and PDF' }, api: 'export(), chapter_size(), estimate_title_size()' },
+};
