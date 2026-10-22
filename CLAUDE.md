@@ -43,12 +43,14 @@ src/
   lib/changelog.ts      # разбирает CHANGELOG.md (Keep a Changelog от git-cliff)
   lib/coverage.ts       # покрытие API: endpoints.md + openapi.json (lib/openapi.ts) + docstring-и (lib/pydoc.ts)
   data/coverage-groups.ts # тег операции → группа таблицы покрытия, подписи групп из макета
+  lib/examples.ts       # примеры из examples/ репозиториев SDK; пометка «аккаунт» — по чтению переменных окружения
+  data/examples.ts      # названия примеров RU/EN и строка API из макета; без записи — из имени файла и README
   components/CoverageTable.tsx # единственный остров (Preact); подробности грузит из /data/coverage/<package>.json
   scripts/tabs.ts       # вкладки по SDK на Changelog и Coverage
   lib/grayscale-theme.ts# тема подсветки кода; дублирует цвета tokens.css (Shiki красит инлайном)
   layouts/Base.astro    # <head>, шрифты; шапки — в компонентах страниц
   components/
-  pages/[lang]/         # /en/…, /ru/…: главная, docs/<package>/, changelog/, coverage/ (#<package> — вкладка), about/
+  pages/[lang]/         # /en/…, /ru/…: главная, docs/<package>/, examples/, changelog/, coverage/ (#<package> — вкладка), about/
   pages/data/coverage/  # статический JSON подробностей операций для таблицы покрытия
 public/logo.png         # знак ア в энсо из макета; logo-full.png — с надписью, для About
 scripts/sync-sdk.mjs    # клонирует репозитории из sdks.ts в .sdk/

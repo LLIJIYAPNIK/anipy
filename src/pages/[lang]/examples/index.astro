@@ -1,0 +1,363 @@
+---
+import Base from '../../../layouts/Base.astro';
+import SiteHeader from '../../../components/SiteHeader.astro';
+import { sdks } from '../../../data/sdks';
+import { loadExamples } from '../../../lib/examples';
+import { langs, t, type Key, type Lang } from '../../../i18n';
+
+export const getStaticPaths = () => langs.map((lang) => ({ params: { lang } }));
+
+const lang = Astro.params.lang as Lang;
+
+const examples = sdks.flatMap((sdk) => loadExamples(sdk));
+const plural = new Intl.PluralRules(lang).select(examples.length);
+const eyebrow = `${t(lang, 'examples.eyebrow')} · ${examples.length} ${t(lang, `examples.script.${plural}` as Key)}`;
+
+// Вкладки: «Все» и SDK, у которых есть примеры.
+const tabs = [
+  { id: 'all', number: '', kana: '', label: t(lang, 'examples.all'), count: examples.length },
+  ...sdks
+    .map((sdk) => ({
+      id: sdk.package,
+      number: sdk.number,
+      kana: sdk.kana,
+      label: sdk.package.replace(/-python-sdk$/, ''),
+      count: examples.filter((e) => e.sdk === sdk).length,
+    }))
+    .filter((tab) => tab.count > 0),
+];
+---
+
+<Base lang={lang} title={`${t(lang, 'examples.title')} — ANIPY`} description={t(lang, 'examples.lead')}>
+  <SiteHeader lang={lang} current="examples" />
+
+  <main class="page">
+    <div class="intro">
+      <div class="intro-text">
+        <div class="meta eyebrow">{eyebrow}</div>
+        <h1>{t(lang, 'examples.title')}</h1>
+        <p class="lead">{t(lang, 'examples.lead')}</p>
+        <p class="note">{t(lang, 'examples.note')}</p>
+      </div>
+      <span class="vertical" aria-hidden="true">
+        <span class="jp" lang="ja">実例</span>
+        <span class="vertical-label">{t(lang, 'examples.vertical')}</span>
+      </span>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="SDK">
+      {
+        tabs.map((tab, i) => (
+          <button type="button" role="tab" aria-selected={i === 0 ? 'true' : 'false'} aria-controls="examples-list" data-filter={tab.id}>
+            {tab.number && <span class="num">{tab.number}</span>}
+            {tab.kana && (
+              <span class="jp" lang="ja">
+                {tab.kana}
+              </span>
+            )}
+            <span class="pkg">{tab.label}</span>
+            <span class="count">{tab.count}</span>
+          </button>
+        ))
+      }
+    </div>
+
+    <ul id="examples-list" role="tabpanel" class="list">
+      {
+        examples.map((e) => (
+          <li data-package={e.sdk.package}>
+            <span class="num-big" aria-hidden="true">
+              {e.num}
+            </span>
+            <div class="body">
+              <div class="item-meta">
+                <span>{e.sdk.package}</span>
+                {e.account && <span class="account">{t(lang, 'examples.account').toUpperCase()}</span>}
+              </div>
+              <h2>{e.title[lang]}</h2>
+              {e.api && <code class="api">{e.api}</code>}
+              <div class="actions">
+                <button
+                  type="button"
+                  class="run"
+                  aria-label={`${t(lang, 'examples.copyLabel')} ${e.file}`}
+                  data-command={`python examples/${e.file}`}
+                  data-done={t(lang, 'examples.copied')}
+                >
+                  <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
+                    <rect x="5" y="5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.1" />
+                    <path d="M11 5V2H2v9h3" fill="none" stroke="currentColor" stroke-width="1.1" />
+                  </svg>
+                  <span aria-live="polite">$ python examples/{e.file}</span>
+                </button>
+                <a class="source" href={e.href} target="_blank" rel="noopener noreferrer" aria-label={`${e.file} ${t(lang, 'nav.onGithub')}`}>
+                  {t(lang, 'examples.source').toUpperCase()} ↗
+                </a>
+              </div>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </main>
+</Base>
+
+<script>
+  // Вкладки фильтруют один список; #<package> открывает вкладку пакета.
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('[role=tab][data-filter]')];
+  const items = [...document.querySelectorAll<HTMLLIElement>('#examples-list li')];
+  const select = (tab: HTMLButtonElement, focus = false) => {
+    const filter = tab.dataset.filter!;
+    for (const other of tabs) {
+      other.setAttribute('aria-selected', String(other === tab));
+      other.tabIndex = other === tab ? 0 : -1;
+    }
+    for (const item of items) item.hidden = filter !== 'all' && item.dataset.package !== filter;
+    if (focus) tab.focus();
+    history.replaceState(null, '', filter === 'all' ? location.pathname : `#${filter}`);
+  };
+  for (const tab of tabs) {
+    tab.addEventListener('click', () => select(tab));
+    tab.addEventListener('keydown', (e) => {
+      const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (step) select(tabs[(tabs.indexOf(tab) + step + tabs.length) % tabs.length], true);
+    });
+  }
+  const fromHash = tabs.find((tab) => `#${tab.dataset.filter}` === location.hash);
+  if (fromHash) select(fromHash);
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>('.run')) {
+    const label = button.querySelector('[aria-live]')!;
+    const idle = label.textContent;
+    button.addEventListener('click', async () => {
+      await navigator.clipboard?.writeText(button.dataset.command ?? '').catch(() => {});
+      label.textContent = button.dataset.done ?? idle;
+      button.classList.add('is-done');
+      setTimeout(() => {
+        label.textContent = idle;
+        button.classList.remove('is-done');
+      }, 1800);
+    });
+  }
+</script>
+
+<style>
+  .page {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 72px var(--page-gutter) 120px;
+  }
+  .intro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 48px;
+  }
+  .intro-text {
+    flex: 1 1 560px;
+    min-width: 0;
+    max-width: 780px;
+  }
+  .eyebrow {
+    font-size: var(--meta-size-lg);
+  }
+  h1 {
+    margin: 22px 0 0;
+    font-weight: 400;
+    font-size: 64px;
+    line-height: 1.05;
+  }
+  .lead {
+    margin: 26px 0 0;
+    font-size: 22px;
+    line-height: 1.55;
+    color: var(--body-soft);
+  }
+  .note {
+    margin: 14px 0 0;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--secondary);
+  }
+  .vertical {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .vertical .jp {
+    writing-mode: vertical-rl;
+    font-size: 76px;
+  }
+  .vertical-label {
+    writing-mode: vertical-rl;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding-top: 6px;
+  }
+
+  .tabs {
+    margin-top: 64px;
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--divider);
+  }
+  [role='tab'] {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 16px 0 14px;
+    margin: 0 40px -1px 0;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    color: var(--muted);
+    font: inherit;
+    cursor: pointer;
+  }
+  [role='tab'][aria-selected='true'] {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+  }
+  .num {
+    font-weight: 300;
+    font-size: 22px;
+    letter-spacing: 0.06em;
+  }
+  [role='tab'] .jp {
+    font-size: 17px;
+    line-height: inherit;
+  }
+  .pkg {
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .count {
+    font-family: var(--font-mono);
+    font-size: var(--meta-size);
+    color: var(--muted);
+  }
+
+  .list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 560px), 1fr));
+    border-left: 1px solid var(--divider);
+  }
+  .list li {
+    display: flex;
+    gap: 28px;
+    padding: 32px 28px 28px;
+    border-right: 1px solid var(--divider);
+    border-bottom: 1px solid var(--divider);
+  }
+  .list li[hidden] {
+    display: none;
+  }
+  .num-big {
+    flex: 0 0 48px;
+    font-weight: 300;
+    font-size: 40px;
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    color: var(--body-soft);
+  }
+  .body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    font-family: var(--font-mono);
+    font-size: var(--meta-size);
+    letter-spacing: 0.18em;
+    color: var(--muted);
+  }
+  .account {
+    padding: 2px 6px;
+    border: 1px solid var(--rule);
+    color: var(--body-soft);
+  }
+  h2 {
+    margin: 0;
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 1.25;
+  }
+  .api {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--secondary);
+  }
+  .actions {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 18px;
+  }
+  .run {
+    height: 36px;
+    max-width: 100%;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    background: transparent;
+    border: 1px solid var(--divider);
+    color: var(--secondary);
+    font-family: var(--font-mono);
+    font-size: var(--meta-size-lg);
+    cursor: pointer;
+  }
+  .run span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .run:hover,
+  .run.is-done {
+    color: var(--ink);
+  }
+  .source {
+    padding: 10px 0;
+    font-family: var(--font-mono);
+    font-size: var(--meta-size);
+    letter-spacing: var(--meta-tracking);
+    color: var(--secondary);
+  }
+  .source:hover {
+    color: var(--ink);
+  }
+
+  @media (max-width: 767px) {
+    .page {
+      padding-top: 40px;
+    }
+    h1 {
+      font-size: 44px;
+    }
+    .vertical {
+      display: none;
+    }
+    .list li {
+      gap: 18px;
+      padding: 24px 16px;
+    }
+    .num-big {
+      flex-basis: 36px;
+      font-size: 32px;
+    }
+  }
+</style>
