@@ -1,0 +1,36 @@
+---
+import Base from '../layouts/Base.astro';
+import Logo from '../components/Logo.astro';
+import { t } from '../i18n';
+
+// Статический хостинг отдаёт одну 404 на все языки — показываем оба.
+---
+
+<Base lang="ru" title="404 — ANIPY">
+  <header class="head"><Logo lang="ru" /></header>
+  <main class="error">
+    <p class="jp" lang="ja">迷子</p>
+    <p class="meta">404</p>
+    <p>{t('ru', 'error.404')} <a href="/ru/">{t('ru', 'error.home')}</a></p>
+    <p lang="en">{t('en', 'error.404')} <a href="/en/">{t('en', 'error.home')}</a></p>
+  </main>
+</Base>
+
+<style>
+  .head {
+    padding: 34px var(--page-gutter) 0;
+  }
+  .error {
+    margin: var(--panels-top) var(--page-gutter);
+    font-size: 20px;
+  }
+  .jp {
+    font-size: var(--jp-size);
+  }
+  .error a {
+    border-bottom: 1px solid var(--ink);
+  }
+  p + p {
+    margin-top: 12px;
+  }
+</style>

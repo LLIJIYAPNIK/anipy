@@ -1,0 +1,319 @@
+---
+import GithubIcon from './GithubIcon.astro';
+import type { Sdk } from '../data/sdks';
+import { t, type Lang } from '../i18n';
+
+interface Props {
+  sdk: Sdk;
+  lang: Lang;
+}
+
+const { sdk, lang } = Astro.props;
+const route = `/${lang}/docs/${sdk.package}/`;
+const meta = `${sdk.license} · PYTHON ${sdk.python}`;
+const githubLabel = `${sdk.package} ${t(lang, 'nav.onGithub')}`;
+const id = `sdk-${sdk.package}`;
+---
+
+<!-- Десктоп: панель целиком — ссылка на документацию, GitHub — соседняя ссылка. -->
+<div class="panel">
+  <a class="panel-link" href={route} aria-label={`${sdk.kana} — ${sdk.label[lang]}: ${sdk.package}, ${t(lang, 'nav.docs').toLowerCase()}`}></a>
+
+  <div class="title" aria-hidden="true">
+    <span class="jp kana" lang="ja">{sdk.kana}</span>
+    <span class="label">{sdk.label[lang]}</span>
+  </div>
+
+  <div class="details">
+    <div class="meta">{sdk.platform}</div>
+    <div class="package">{sdk.package}</div>
+    <div class="rule"></div>
+    <p class="description">{sdk.description[lang]}</p>
+    <div class="facts"><span>/docs/{sdk.package}/</span><span>{meta}</span></div>
+    <div class="actions">
+      <span class="docs-cta" aria-hidden="true">{t(lang, 'nav.docs').toUpperCase()} ↗</span>
+      <a class="github" href={sdk.github} target="_blank" rel="noopener noreferrer" aria-label={githubLabel}>
+        <GithubIcon size={18} />
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Мобильный: аккордеон. -->
+<section class="accordion">
+  <h2>
+    <button type="button" aria-expanded="false" aria-controls={id}>
+      <span class="acc-head">
+        <span class="acc-package">{sdk.package}</span>
+        <span class="acc-state meta">
+          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.1" fill="none"></path></svg>
+          <span class="when-closed">{t(lang, 'panel.open').toUpperCase()}</span>
+          <span class="when-open">{t(lang, 'panel.close').toUpperCase()}</span>
+        </span>
+      </span>
+      <span class="acc-title" aria-hidden="true">
+        <span class="jp" lang="ja">{sdk.kana}</span>
+        <span class="label">{sdk.label[lang]}</span>
+      </span>
+      <span class="visually-hidden">{sdk.label[lang]} — {sdk.platform}</span>
+    </button>
+  </h2>
+  <div class="acc-body" id={id} hidden>
+    <div class="meta">{sdk.platform}</div>
+    <p class="description">{sdk.description[lang]}</p>
+    <div class="facts"><span>/docs/{sdk.package}/</span><span>{meta}</span></div>
+    <div class="acc-actions">
+      <a class="acc-docs" href={route}>{t(lang, 'nav.docs').toUpperCase()} <span aria-hidden="true">↗</span></a>
+      <a class="github" href={sdk.github} target="_blank" rel="noopener noreferrer" aria-label={githubLabel}>
+        <GithubIcon size={18} />
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .panel {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    border-left: 1px solid var(--divider);
+    background-color: var(--ground);
+    transition:
+      flex-grow var(--panel-duration) var(--ease),
+      background-color var(--panel-duration);
+  }
+  .panel:hover,
+  .panel:focus-within {
+    background-color: var(--panel-hover);
+  }
+  .panel-link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+  .panel-link:focus-visible {
+    outline-offset: -10px;
+  }
+  .title {
+    position: absolute;
+    top: 0;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 20px;
+    pointer-events: none;
+  }
+  .kana {
+    writing-mode: vertical-rl;
+    font-size: var(--jp-size);
+    letter-spacing: 0.02em;
+  }
+  .label {
+    writing-mode: vertical-rl;
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-right: 1px;
+  }
+  .details {
+    position: absolute;
+    left: 36px;
+    top: 260px;
+    width: 272px;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(12px);
+    transition:
+      opacity var(--reveal-out),
+      transform var(--reveal-out);
+  }
+  .panel:hover .details,
+  .panel:focus-within .details {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--reveal-in) var(--reveal-delay),
+      transform var(--panel-duration) var(--ease-out) var(--reveal-delay);
+  }
+  .details .meta {
+    letter-spacing: 0.22em;
+  }
+  .package {
+    margin-top: 14px;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    letter-spacing: 0.01em;
+  }
+  .rule {
+    width: 28px;
+    height: 1px;
+    margin: 22px 0;
+    background: var(--rule);
+  }
+  .description {
+    margin: 0;
+    font-size: 19px;
+    line-height: 1.45;
+  }
+  .facts {
+    margin-top: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    font-family: var(--font-mono);
+    font-size: var(--meta-size-lg);
+    color: var(--muted);
+  }
+  .actions {
+    margin-top: 36px;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+  }
+  .docs-cta {
+    font-family: var(--font-mono);
+    font-size: var(--meta-size-lg);
+    letter-spacing: var(--meta-tracking);
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .github {
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--rule);
+    border-radius: 50%;
+  }
+  .details .github {
+    pointer-events: none;
+  }
+  .panel:hover .details .github,
+  .panel:focus-within .details .github {
+    pointer-events: auto;
+  }
+
+  .accordion {
+    display: none;
+  }
+
+  @media (max-width: 767px) {
+    .panel {
+      display: none;
+    }
+    .accordion {
+      display: block;
+      border-bottom: 1px solid var(--divider);
+      transition: background-color 400ms;
+    }
+    .accordion:has([aria-expanded='true']) {
+      background-color: var(--panel-hover);
+    }
+    h2 {
+      margin: 0;
+    }
+    button {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: 212px;
+      padding: 0;
+      overflow: hidden;
+      background: transparent;
+      border: 0;
+      color: var(--ink);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .acc-head {
+      position: absolute;
+      left: 20px;
+      top: 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .acc-package {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.02em;
+    }
+    .acc-state {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .acc-state svg {
+      color: var(--ink);
+      transition: transform 400ms var(--ease);
+    }
+    [aria-expanded='true'] .acc-state svg {
+      transform: rotate(45deg);
+    }
+    .when-open,
+    [aria-expanded='true'] .when-closed {
+      display: none;
+    }
+    [aria-expanded='true'] .when-open {
+      display: inline;
+    }
+    .acc-title {
+      position: absolute;
+      top: 0;
+      right: 16px;
+      display: flex;
+      flex-direction: row-reverse;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .acc-title .jp {
+      writing-mode: vertical-rl;
+      font-size: var(--jp-size);
+      letter-spacing: 0.02em;
+      padding-top: 18px;
+    }
+    .acc-title .label {
+      font-size: 12px;
+      padding-top: 22px;
+    }
+    .acc-body {
+      padding: 36px 20px 32px;
+      border-top: 1px solid var(--divider);
+    }
+    .acc-body .description {
+      margin-top: 16px;
+      font-size: 20px;
+    }
+    .acc-body .facts {
+      margin-top: 14px;
+    }
+    .acc-actions {
+      margin-top: 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .acc-docs {
+      flex: 1 1 auto;
+      height: var(--tap-min);
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border: 1px solid var(--ink);
+      font-family: var(--font-mono);
+      font-size: var(--meta-size-lg);
+      letter-spacing: var(--meta-tracking);
+    }
+    .acc-actions .github {
+      flex: 0 0 var(--tap-min);
+      width: var(--tap-min);
+      height: var(--tap-min);
+    }
+  }
+</style>

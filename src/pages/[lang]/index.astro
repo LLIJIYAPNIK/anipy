@@ -1,0 +1,247 @@
+---
+import Base from '../../layouts/Base.astro';
+import Logo from '../../components/Logo.astro';
+import LangSwitch from '../../components/LangSwitch.astro';
+import GithubIcon from '../../components/GithubIcon.astro';
+import SdkPanel from '../../components/SdkPanel.astro';
+import { owner, sdks } from '../../data/sdks';
+import { langs, t, type Lang } from '../../i18n';
+
+export const getStaticPaths = () => langs.map((lang) => ({ params: { lang } }));
+
+const lang = Astro.params.lang as Lang;
+const ownerName = owner.split('/').pop();
+---
+
+<Base lang={lang} title="ANIPY" description={t(lang, 'site.tagline')}>
+  <div class="home">
+    <header class="brand">
+      <Logo lang={lang} />
+      <span class="meta tagline-meta">ANIME × PYTHON</span>
+    </header>
+
+    <div class="tools">
+      <LangSwitch lang={lang} />
+      <a class="about" href={`/${lang}/about/`}>
+        <span class="jp" lang="ja">概要</span><span class="about-word">{t(lang, 'nav.about').toUpperCase()}</span>
+      </a>
+    </div>
+
+    <section class="intro">
+      <div class="name">
+        <h1 class="jp">ANIPY</h1>
+        <span class="name-sub">{t(lang, 'site.name')}</span>
+      </div>
+      <p class="jp-line jp" lang="ja">アニメ・ラノベ・漫画のための<br />Python SDK コレクション。</p>
+      <p class="tagline">{t(lang, 'site.tagline')}</p>
+      <p class="lead">{t(lang, 'site.intro')}</p>
+    </section>
+
+    <footer class="foot">
+      <a class="foot-github" href={owner} target="_blank" rel="noopener noreferrer" aria-label={`${ownerName} ${t(lang, 'nav.onGithub')}`}>
+        <GithubIcon />
+      </a>
+      <span class="meta">{t(lang, 'site.footer')}</span>
+    </footer>
+
+    <nav class="panels" aria-label={t(lang, 'nav.collection')}>
+      {sdks.map((sdk) => <SdkPanel sdk={sdk} lang={lang} />)}
+    </nav>
+  </div>
+</Base>
+
+<script>
+  for (const button of document.querySelectorAll<HTMLButtonElement>('.accordion button')) {
+    button.addEventListener('click', () => {
+      const open = button.getAttribute('aria-expanded') !== 'true';
+      button.setAttribute('aria-expanded', String(open));
+      const body = document.getElementById(button.getAttribute('aria-controls') ?? '');
+      if (body) body.hidden = !open;
+    });
+  }
+</script>
+
+<style>
+  /* Макет 1440×900: блоки позиционированы от краёв экрана, панели — от 100px до низа. */
+  .home {
+    position: relative;
+    min-height: max(100vh, 720px);
+    overflow: hidden;
+  }
+  .brand {
+    position: absolute;
+    top: 34px;
+    left: var(--page-gutter);
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .tagline-meta {
+    letter-spacing: 0.22em;
+  }
+  .tools {
+    position: absolute;
+    top: 34px;
+    right: var(--page-gutter);
+    height: var(--tap-min);
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+  .about {
+    height: var(--tap-min);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: var(--meta-size-lg);
+    letter-spacing: 0.22em;
+  }
+  .about .jp {
+    font-size: 15px;
+    letter-spacing: 0.1em;
+  }
+  .intro {
+    position: absolute;
+    left: 88px;
+    bottom: 150px;
+    width: 420px;
+  }
+  .name {
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+  }
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    letter-spacing: 0.14em;
+  }
+  .name-sub {
+    font-size: 17px;
+    font-style: italic;
+    letter-spacing: 0.06em;
+    color: var(--tertiary);
+  }
+  .jp-line {
+    margin: 34px 0 0;
+    font-weight: 600;
+    font-size: 15px;
+    line-height: 2;
+    letter-spacing: 0.08em;
+  }
+  .tagline {
+    margin: 26px 0 0;
+    max-width: 320px;
+    font-size: 20px;
+    line-height: 1.35;
+    letter-spacing: 0.005em;
+  }
+  .lead {
+    margin: 14px 0 0;
+    max-width: 360px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--secondary);
+  }
+  .foot {
+    position: absolute;
+    left: 88px;
+    bottom: 46px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .foot-github {
+    width: 44px;
+    height: 44px;
+    margin-left: -13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .panels {
+    position: absolute;
+    inset: var(--panels-top) var(--panels-right) 0 var(--intro-width);
+    display: flex;
+    border-right: 1px solid var(--divider);
+  }
+  /* Наведение/фокус: 0.85 : 2.6 : 0.85. :global целиком — Astro не разворачивает :global() внутри :has(). */
+  :global(.panels:has(.panel:hover, .panel:focus-within) .panel) {
+    flex-grow: 0.85;
+  }
+  /* Та же специфичность, что выше, — побеждает порядком. */
+  :global(.panels:has(.panel) .panel:is(:hover, :focus-within)) {
+    flex-grow: 2.6;
+  }
+
+  @media (max-width: 1100px) {
+    .intro,
+    .foot {
+      left: var(--page-gutter);
+    }
+    .intro {
+      width: calc(var(--intro-width) - var(--page-gutter) - 32px);
+    }
+  }
+
+  @media (max-width: 767px) {
+    .home {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .brand,
+    .tools,
+    .intro,
+    .foot,
+    .panels {
+      position: static;
+    }
+    .brand {
+      padding: 18px 12px 18px 20px;
+    }
+    .brand .tagline-meta {
+      display: none;
+    }
+    .tools {
+      order: -1;
+      position: absolute;
+      top: 18px;
+      right: 12px;
+      gap: 12px;
+    }
+    .about-word {
+      display: none;
+    }
+    .intro {
+      width: auto;
+      padding: 40px 20px 48px;
+    }
+    .jp-line {
+      margin-top: 26px;
+      font-size: 14px;
+    }
+    .tagline {
+      margin-top: 20px;
+      font-size: 21px;
+      max-width: none;
+    }
+    .lead {
+      margin-top: 12px;
+      max-width: none;
+    }
+    .panels {
+      display: block;
+      border-right: 0;
+      border-top: 1px solid var(--divider);
+    }
+    .foot {
+      order: 1;
+      padding: 32px 20px 40px;
+    }
+    .foot-github {
+      margin-left: -13px;
+    }
+  }
+</style>
