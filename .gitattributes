@@ -1,0 +1,2 @@
+# Скрипты выполняются на Linux-сервере: только LF, независимо от core.autocrlf.
+*.sh text eol=lf
