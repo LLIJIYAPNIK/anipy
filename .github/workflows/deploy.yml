@@ -1,7 +1,8 @@
 name: Deploy
 
-# Сборка и выкладка dist/ на VPS. Запускается при изменениях в main, вручную
-# и по релизу SDK: репозитории SDK шлют repository_dispatch с типом sdk-release.
+# Сборка образа, публикация в GHCR и перезапуск контейнера на сервере.
+# Запускается при изменениях в main, вручную и по релизу SDK: репозитории SDK
+# шлют repository_dispatch с типом sdk-release.
 on:
   push:
     branches: [main]
@@ -14,10 +15,31 @@ concurrency:
   group: deploy
   cancel-in-progress: false
 
+env:
+  IMAGE: ghcr.io/llijiyapnik/anipy
+
 jobs:
-  deploy:
+  image:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Build
+        run: docker build --tag "$IMAGE:latest" --tag "$IMAGE:${{ github.sha }}" .
+      - name: Push
+        run: |
+          docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:latest"
+
+  deploy:
+    needs: image
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment:
       name: production
       url: https://anipy.ru
@@ -27,23 +49,15 @@ jobs:
       DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - run: npm run sync
-      - run: npm run check
-      - run: npm run build
 
-      # Пока секреты не заданы (см. docs/deploy.md), сборка проверяется, а выкладка пропускается.
+      # Пока секреты не заданы (см. docs/deploy.md), образ публикуется, а сервер не трогается.
       - name: Check deploy secrets
         id: secrets
         run: |
           if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_USER" ] && [ -n "$DEPLOY_PATH" ]; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::notice::Deploy secrets are not set, skipping the upload. See docs/deploy.md."
+            echo "::notice::Deploy secrets are not set, skipping the server update. See docs/deploy.md."
           fi
 
       - name: Set up SSH
@@ -57,10 +71,14 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
 
-      - name: Upload
+      - name: Update the compose file
         if: steps.secrets.outputs.ready == 'true'
-        # --delete убирает с сервера файлы, которых больше нет в сборке.
         run: >
-          rsync -az --delete
-          -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes"
-          dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
+          rsync -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes"
+          deploy/docker-compose.yml "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/docker-compose.yml"
+
+      - name: Restart the container
+        if: steps.secrets.outputs.ready == 'true'
+        run: >
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST"
+          "cd '$DEPLOY_PATH' && docker compose pull && docker compose up -d --remove-orphans && docker image prune -f"
