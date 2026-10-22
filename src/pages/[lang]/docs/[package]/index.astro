@@ -1,0 +1,469 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../../../layouts/Base.astro';
+import DocsHeader from '../../../../components/DocsHeader.astro';
+import CodeBlock from '../../../../components/CodeBlock.astro';
+import { sdks, sdkDir, type Sdk } from '../../../../data/sdks';
+import { readmeParts } from '../../../../lib/readme';
+import { langs, t, type Key, type Lang } from '../../../../i18n';
+
+export const getStaticPaths = () =>
+  langs.flatMap((lang) => sdks.map((sdk) => ({ params: { lang, package: sdk.package }, props: { sdk } })));
+
+const { sdk } = Astro.props as { sdk: Sdk };
+const lang = Astro.params.lang as Lang;
+
+const docs = await getCollection('sdkDocs', (e) => e.filePath === `${sdkDir(sdk)}/README.md`);
+const readme = docs[0]?.body ? readmeParts(docs[0].body) : undefined;
+
+const toc: { id: string; key: Key }[] = [
+  { id: 'overview', key: 'docs.overview' },
+  ...(readme?.install.length ? [{ id: 'install', key: 'docs.install' as Key }] : []),
+  ...(readme?.quickstart ? [{ id: 'quickstart', key: 'docs.quickstart' as Key }] : []),
+  ...(sdk.api ? [{ id: 'api', key: 'docs.api' as Key }] : []),
+];
+
+// Следующий SDK по кругу — «Далее», остальные — «Также в коллекции».
+const index = sdks.indexOf(sdk);
+const others = [...sdks.slice(index + 1), ...sdks.slice(0, index)];
+const orLabel = t(lang, 'docs.or');
+const changelogHref = `/${lang}/changelog/#${sdk.package}`;
+---
+
+<Base lang={lang} title={`${sdk.package} — ANIPY`} description={sdk.description[lang]}>
+  <DocsHeader lang={lang} sdk={sdk} />
+
+  <div class="layout">
+    <aside class="side">
+      <div class="mark" aria-hidden="true">
+        <span class="num">{sdk.number}</span>
+        <span class="mark-title">
+          <span class="jp" lang="ja">{sdk.kana}</span>
+          <span class="mark-label">{sdk.label[lang]}</span>
+        </span>
+      </div>
+      <nav class="side-nav" aria-label={t(lang, 'nav.docs')}>
+        <div class="group">
+          <span class="meta group-title">{t(lang, 'docs.onPage').toUpperCase()}</span>
+          {toc.map((item) => <a href={`#${item.id}`} data-toc={item.id}>{t(lang, item.key)}</a>)}
+        </div>
+        <div class="group">
+          <span class="meta group-title">{t(lang, 'docs.more').toUpperCase()}</span>
+          <a class="more" href={changelogHref}>{t(lang, 'docs.changelog')}</a>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <article>
+        <div id="overview" class="meta overline">{sdk.number} — {sdk.label[lang].toUpperCase()} · {sdk.platform.toUpperCase()}</div>
+        <h1>{sdk.package}</h1>
+        <p class="description">{sdk.description[lang]}</p>
+        <div class="facts meta">
+          <span>PYTHON {sdk.python}</span>
+          <span>{t(lang, 'docs.license').toUpperCase()} {sdk.license}</span>
+          <a href={`https://pypi.org/project/${sdk.package}/`} target="_blank" rel="noopener noreferrer">PYPI ↗</a>
+          <a href={sdk.github} target="_blank" rel="noopener noreferrer">GITHUB ↗</a>
+          <a href={changelogHref}>{t(lang, 'docs.changelog').toUpperCase()}</a>
+        </div>
+
+        <div class="divider"></div>
+
+        {!readme && <p class="meta">{t(lang, 'docs.missing')}</p>}
+
+        {
+          readme?.install.length ? (
+            <section>
+              <h2 id="install">{t(lang, 'docs.install')}</h2>
+              <p class="text">{t(lang, 'docs.installText')}</p>
+              <CodeBlock lang={lang} caption="SHELL" copyLabel={t(lang, 'docs.copyInstall')} copy={readme.install.join('\n')}>
+                {readme.install.map((cmd, i) => (
+                  <>
+                    {i > 0 && <span class="prompt">{'# ' + orLabel + '\n'}</span>}
+                    <span class="prompt">$ </span>
+                    {cmd + '\n'}
+                  </>
+                ))}
+              </CodeBlock>
+            </section>
+          ) : null
+        }
+
+        {
+          readme?.quickstart && (
+            <section>
+              <h2 id="quickstart">{t(lang, 'docs.quickstart')}</h2>
+              {sdk.quickstartIntro && <p class="text">{sdk.quickstartIntro[lang]}</p>}
+              <CodeBlock lang={lang} caption="PYTHON" copyLabel={t(lang, 'docs.copyQuickstart')} copy={readme.quickstart} code={readme.quickstart} />
+            </section>
+          )
+        }
+
+        {
+          sdk.api && (
+            <section>
+              <h2 id="api">{t(lang, 'docs.api')}</h2>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">{t(lang, 'docs.name').toUpperCase()}</th>
+                      <th scope="col">{t(lang, 'docs.description').toUpperCase()}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sdk.api.map((row) => (
+                      <tr>
+                        <td class="api-name">{row.name}</td>
+                        <td>{row.description[lang]}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )
+        }
+
+        <nav class="others" aria-label={t(lang, 'docs.otherSdks')}>
+          {
+            others.map((other, i) => (
+              <a href={`/${lang}/docs/${other.package}/`}>
+                <span class="other-text">
+                  <span class="meta">{t(lang, i === 0 ? 'docs.next' : 'docs.also').toUpperCase()}</span>
+                  <span class="other-package">{other.package}</span>
+                </span>
+                <span class="other-mark">
+                  <span class="num">{other.number}</span>
+                  <span class="jp" lang="ja">
+                    {other.kana}
+                  </span>
+                </span>
+              </a>
+            ))
+          }
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" aria-label={t(lang, 'docs.onPage')}>
+      <div class="toc-inner">
+        <div class="meta group-title">{t(lang, 'docs.onPage').toUpperCase()}</div>
+        <ul>
+          {
+            toc.map((item) => (
+              <li>
+                <a href={`#${item.id}`} data-toc={item.id}>
+                  <span class="dash" aria-hidden="true" />
+                  {t(lang, item.key)}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </aside>
+  </div>
+</Base>
+
+<script>
+  // Подсветка текущего раздела в обеих навигациях.
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc]')];
+  const ids = [...new Set(links.map((a) => a.dataset.toc!))];
+  const setCurrent = (id: string) => {
+    for (const a of links) a.setAttribute('aria-current', a.dataset.toc === id ? 'location' : 'false');
+  };
+  const update = () => {
+    let current = ids[0];
+    for (const id of ids) {
+      const el = document.getElementById(id);
+      if (el && el.getBoundingClientRect().top < window.innerHeight * 0.3) current = id;
+    }
+    // Последний раздел может не доехать до верха — внизу страницы он текущий.
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) current = ids[ids.length - 1];
+    setCurrent(current);
+  };
+  update();
+  window.addEventListener('scroll', update, { passive: true });
+</script>
+
+<style>
+  .layout {
+    max-width: 1440px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  /* Левая колонка */
+  .side {
+    flex: 1 1 240px;
+    max-width: 300px;
+    padding: 48px 32px 48px var(--page-gutter);
+    border-right: 1px solid var(--divider);
+    display: flex;
+    flex-direction: column;
+    gap: 44px;
+  }
+  .mark {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .mark .num {
+    font-weight: 300;
+    font-size: 64px;
+    line-height: 0.8;
+    letter-spacing: 0.04em;
+  }
+  .mark-title {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .mark-title .jp {
+    writing-mode: vertical-rl;
+    font-size: var(--jp-size-docs);
+  }
+  .mark-label {
+    writing-mode: vertical-rl;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding-top: 4px;
+  }
+  .side-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .group {
+    display: flex;
+    flex-direction: column;
+  }
+  .group-title {
+    letter-spacing: 0.22em;
+    padding-bottom: 8px;
+  }
+  .side-nav a {
+    font-size: 18px;
+    padding: 8px 0 8px 14px;
+    border-left: 1px solid var(--divider);
+    color: var(--secondary);
+  }
+  .side-nav a[aria-current='location'] {
+    border-left-color: var(--ink);
+    color: var(--ink);
+  }
+  .side-nav a.more {
+    color: var(--tertiary);
+  }
+
+  /* Контент */
+  .main {
+    flex: 999 1 560px;
+    min-width: 0;
+    padding: 72px 72px 96px;
+  }
+  article {
+    max-width: 720px;
+  }
+  .overline {
+    font-size: var(--meta-size-lg);
+  }
+  h1 {
+    margin: 20px 0 0;
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: 44px;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+  .description {
+    margin: 24px 0 0;
+    font-size: 25px;
+    line-height: 1.4;
+  }
+  .facts {
+    margin-top: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 28px;
+    font-size: var(--meta-size-lg);
+    letter-spacing: 0.16em;
+    color: var(--secondary);
+  }
+  .facts a {
+    color: var(--ink);
+  }
+  .divider {
+    height: 1px;
+    background: var(--divider);
+    margin: 56px 0;
+  }
+  section + section {
+    margin-top: 64px;
+  }
+  h2 {
+    margin: 0;
+    font-weight: 500;
+    font-size: 34px;
+    line-height: 1.2;
+  }
+  .text {
+    margin: 16px 0 0;
+    font-size: 19px;
+    line-height: 1.6;
+    color: var(--body-soft);
+  }
+  .prompt {
+    color: var(--muted);
+  }
+  .table-wrap {
+    margin-top: 24px;
+    overflow-x: auto;
+    border-top: 1px solid var(--divider);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 18px;
+  }
+  th {
+    text-align: left;
+    padding: 14px 16px 14px 0;
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: var(--meta-size);
+    letter-spacing: var(--meta-tracking);
+    color: var(--muted);
+    border-bottom: 1px solid var(--divider);
+  }
+  td {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--divider);
+    color: var(--body-soft);
+  }
+  .api-name {
+    padding-right: 16px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    white-space: nowrap;
+    color: var(--ink);
+  }
+  .others {
+    margin-top: 88px;
+    display: flex;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--divider);
+  }
+  .others a {
+    flex: 1 1 260px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 28px 24px 24px 0;
+  }
+  .others a + a {
+    padding: 28px 0 24px 24px;
+    border-left: 1px solid var(--divider);
+  }
+  .other-text {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .other-package {
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  .other-mark {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  .other-mark .num {
+    font-weight: 300;
+    font-size: 34px;
+    line-height: 1;
+    letter-spacing: 0.06em;
+  }
+  .other-mark .jp {
+    font-size: 24px;
+  }
+
+  /* Правая колонка */
+  .toc {
+    flex: 1 1 200px;
+    max-width: 240px;
+    padding: 76px 40px 48px 0;
+  }
+  .toc-inner {
+    position: sticky;
+    top: 32px;
+  }
+  .toc ul {
+    list-style: none;
+    margin: 16px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    font-size: 16px;
+  }
+  .toc a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 7px 0;
+    color: var(--secondary);
+  }
+  .dash {
+    width: 0;
+    height: 1px;
+    background: var(--ink);
+    transition: width var(--toc-duration) var(--ease-out);
+  }
+  .toc a[aria-current='location'] {
+    color: var(--ink);
+  }
+  .toc a[aria-current='location'] .dash {
+    width: 20px;
+  }
+
+  @media (max-width: 1100px) {
+    .toc {
+      display: none;
+    }
+  }
+  @media (max-width: 767px) {
+    .side {
+      max-width: none;
+      border-right: 0;
+      border-bottom: 1px solid var(--divider);
+      padding: 32px var(--page-gutter);
+    }
+    .side-nav {
+      display: none;
+    }
+    .main {
+      padding: 40px var(--page-gutter) 72px;
+    }
+    h1 {
+      font-size: 32px;
+    }
+    .description {
+      font-size: 21px;
+    }
+    .others a,
+    .others a + a {
+      padding: 24px 0;
+      border-left: 0;
+    }
+    .others a + a {
+      border-top: 1px solid var(--divider);
+    }
+  }
+</style>
