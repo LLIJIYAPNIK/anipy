@@ -1,0 +1,66 @@
+name: Deploy
+
+# Сборка и выкладка dist/ на VPS. Запускается при изменениях в main, вручную
+# и по релизу SDK: репозитории SDK шлют repository_dispatch с типом sdk-release.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  repository_dispatch:
+    types: [sdk-release]
+
+# Одна выкладка за раз; новая не прерывает начатую.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: https://anipy.ru
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run sync
+      - run: npm run check
+      - run: npm run build
+
+      # Пока секреты не заданы (см. docs/deploy.md), сборка проверяется, а выкладка пропускается.
+      - name: Check deploy secrets
+        id: secrets
+        run: |
+          if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_USER" ] && [ -n "$DEPLOY_PATH" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Deploy secrets are not set, skipping the upload. See docs/deploy.md."
+          fi
+
+      - name: Set up SSH
+        if: steps.secrets.outputs.ready == 'true'
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Upload
+        if: steps.secrets.outputs.ready == 'true'
+        # --delete убирает с сервера файлы, которых больше нет в сборке.
+        run: >
+          rsync -az --delete
+          -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes"
+          dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
