@@ -1,0 +1,39 @@
+---
+import { t, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+  /** 42 на главной, 38 в шапке документации. */
+  size?: 42 | 38;
+}
+
+const { lang, size = 42 } = Astro.props;
+---
+
+<a class="logo" href={`/${lang}/`} aria-label={t(lang, 'nav.home')} data-size={size}>
+  <img src="/logo.png" alt="" width={size} height={size} />
+  <span>anipy</span>
+</a>
+
+<style>
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-height: var(--tap-min);
+  }
+  img {
+    display: block;
+  }
+  span {
+    font-size: 23px;
+    letter-spacing: 0.44em;
+  }
+  [data-size='38'] {
+    gap: 16px;
+  }
+  [data-size='38'] span {
+    font-size: 21px;
+    letter-spacing: 0.42em;
+  }
+</style>
