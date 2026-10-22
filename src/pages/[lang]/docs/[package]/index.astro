@@ -53,6 +53,7 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
         <div class="group">
           <span class="meta group-title">{t(lang, 'docs.more').toUpperCase()}</span>
           {coverage && <a class="more" href={coverageHref}>{t(lang, 'nav.coverage')}</a>}
+          {sdk.examples && <a class="more" href={`/${lang}/examples/#${sdk.package}`}>{t(lang, 'nav.examples')}</a>}
           <a class="more" href={changelogHref}>{t(lang, 'docs.changelog')}</a>
         </div>
       </nav>
