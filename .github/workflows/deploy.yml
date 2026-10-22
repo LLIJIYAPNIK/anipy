@@ -71,10 +71,11 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
 
+      # scp, а не rsync: он входит в OpenSSH, и серверу не нужно ничего доставлять.
       - name: Update the compose file
         if: steps.secrets.outputs.ready == 'true'
         run: >
-          rsync -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes"
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes
           deploy/docker-compose.yml "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/docker-compose.yml"
 
       - name: Restart the container
