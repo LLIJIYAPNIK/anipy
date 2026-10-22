@@ -1,0 +1,8 @@
+.git
+.github
+.astro
+.sdk
+dist
+node_modules
+docs
+*.md

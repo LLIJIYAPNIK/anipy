@@ -1,0 +1,16 @@
+# anipy.ru на сервере. Лежит в папке проекта (DEPLOY_PATH), deploy.yml обновляет его при каждой выкладке.
+# Порт слушается только на localhost — наружу сайт отдаёт nginx на хосте.
+
+name: anipy
+
+services:
+  site:
+    image: ghcr.io/llijiyapnik/anipy:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${ANIPY_PORT:-8081}:80"
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
