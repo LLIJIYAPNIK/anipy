@@ -10,6 +10,17 @@
 
 Пока секреты не заданы, workflow собирает и публикует образ, а сервер не трогает — с пометкой в логе.
 
+## Быстрый путь: шаги 1–3 одним скриптом
+
+[`deploy/setup-server.sh`](../deploy/setup-server.sh) создаёт пользователя `deploy` в группе `docker`, папку проекта, SSH-ключ для GitHub Actions и печатает все пять секретов. На сервере:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/LLIJIYAPNIK/anipy/main/deploy/setup-server.sh -o setup-server.sh
+sudo bash setup-server.sh anipy.ru /srv/anipy
+```
+
+Аргументы необязательны, по умолчанию — `anipy.ru` и `/srv/anipy`. `DEPLOY_KNOWN_HOSTS` скрипт берёт из ключа самого сервера, приватный ключ после вывода на сервере не остаётся. Дальше — шаг 4.
+
 ## 1. Сервер
 
 Нужны Docker с плагином compose и nginx с certbot на хосте; домен `anipy.ru` (и `www`) с A/AAAA-записями на IP сервера.
