@@ -1,0 +1,75 @@
+---
+import Logo from './Logo.astro';
+import LangSwitch from './LangSwitch.astro';
+import { sdks } from '../data/sdks';
+import { t, type Key, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+  current?: 'changelog' | 'about';
+}
+
+const { lang, current } = Astro.props;
+
+const links: { id: string; href: string; key: Key }[] = [
+  { id: 'collection', href: `/${lang}/`, key: 'nav.collection.short' },
+  { id: 'docs', href: `/${lang}/docs/${sdks[0].package}/`, key: 'nav.docs.short' },
+  { id: 'changelog', href: `/${lang}/changelog/`, key: 'nav.changelog' },
+  { id: 'about', href: `/${lang}/about/`, key: 'nav.about' },
+];
+---
+
+<header class="site-header">
+  <Logo lang={lang} size={38} />
+  <div class="right">
+    <nav class="site-nav" aria-label={t(lang, 'nav.site')}>
+      {
+        links.map((l) => (
+          <a href={l.href} aria-current={l.id === current ? 'page' : undefined}>
+            {t(lang, l.key).toUpperCase()}
+          </a>
+        ))
+      }
+    </nav>
+    <div class="lang"><LangSwitch lang={lang} /></div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 32px;
+    padding: 24px var(--page-gutter);
+    border-bottom: 1px solid var(--divider);
+  }
+  .right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .site-nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    font-family: var(--font-mono);
+    font-size: var(--meta-size-lg);
+    letter-spacing: var(--meta-tracking);
+  }
+  .site-nav a {
+    padding: 14px 12px;
+    color: var(--secondary);
+  }
+  .site-nav a[aria-current] {
+    color: var(--ink);
+    border-bottom: 1px solid var(--ink);
+  }
+  .lang {
+    margin-left: 8px;
+    padding-left: 8px;
+    border-left: 1px solid var(--divider);
+  }
+</style>

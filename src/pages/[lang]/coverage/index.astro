@@ -1,0 +1,306 @@
+---
+import Base from '../../../layouts/Base.astro';
+import SiteHeader from '../../../components/SiteHeader.astro';
+import CoverageTable from '../../../components/CoverageTable.tsx';
+import { repoFileUrl, sdks } from '../../../data/sdks';
+import { groupLabels, type GroupKey } from '../../../data/coverage-groups';
+import { loadCoverage } from '../../../lib/coverage';
+import { langs, t, type Key, type Lang } from '../../../i18n';
+
+export const getStaticPaths = () => langs.map((lang) => ({ params: { lang } }));
+
+const lang = Astro.params.lang as Lang;
+
+const tabs = sdks.map((sdk) => ({ sdk, coverage: loadCoverage(sdk) }));
+const main = tabs.find((tab) => tab.coverage);
+
+const formatDate = (iso?: string) => (iso && lang === 'ru' ? iso.split('-').reverse().join('.') : iso ?? '');
+const lead = main
+  ? t(lang, 'coverage.lead').replace('{api}', main.sdk.coverage!.api).replace('{date}', formatDate(main.coverage!.snapshot))
+  : '';
+
+// Строки интерфейса острова — уже на нужном языке.
+const labelKeys = [
+  'status', 'all', 'covered', 'notCovered', 'access', 'anyAccess', 'public', 'account', 'search', 'shown',
+  'colPath', 'colSdk', 'colAccess', 'authYes', 'authNo', 'dup', 'ads', 'empty', 'expandAll', 'collapseAll',
+  'loading', 'failed', 'params', 'noParams', 'body', 'responses', 'exampleValue', 'example', 'signature',
+  'args', 'returns', 'raises', 'sdkLang',
+] as const;
+const labels = {
+  ...Object.fromEntries(labelKeys.map((k) => [k, t(lang, `coverage.${k}` as Key)])),
+  copy: t(lang, 'docs.copy'),
+  copied: t(lang, 'docs.copied'),
+} as Parameters<typeof CoverageTable>[0]['labels'];
+
+const stats = (s: NonNullable<ReturnType<typeof loadCoverage>>['stats']) => [
+  [t(lang, 'coverage.total'), s.total],
+  [t(lang, 'coverage.ok'), s.ok],
+  [t(lang, 'coverage.dupStat'), s.dup],
+  [t(lang, 'coverage.adsStat'), s.ads],
+] as const;
+
+// Порядок групп — как в endpoints.md.
+const groupsFor = (rows: { group: GroupKey }[]) =>
+  [...new Set(rows.map((r) => r.group))].map((key) => ({ key, label: groupLabels[key][lang] }));
+---
+
+<Base lang={lang} title={`${t(lang, 'coverage.title')} — ANIPY`} description={lead}>
+  <SiteHeader lang={lang} />
+
+  <main class="page">
+    <div class="intro">
+      <div class="intro-text">
+        <div class="meta eyebrow">
+          {t(lang, 'coverage.eyebrow')}{main && ` · ${main.sdk.coverage!.api.toUpperCase()}`}
+        </div>
+        <h1>{t(lang, 'coverage.title')}</h1>
+        {lead && <p class="lead">{lead}</p>}
+        {
+          main && (
+            <a class="source" href={repoFileUrl(main.sdk, main.sdk.coverage!.endpoints)} target="_blank" rel="noopener noreferrer">
+              {main.sdk.coverage!.endpoints} ↗
+            </a>
+          )
+        }
+      </div>
+      <span class="vertical" aria-hidden="true">
+        <span class="jp" lang="ja">対応表</span>
+        <span class="vertical-label">{t(lang, 'coverage.vertical')}</span>
+      </span>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="SDK">
+      {
+        tabs.map(({ sdk }, i) => (
+          <button
+            type="button"
+            role="tab"
+            id={`tab-${sdk.package}`}
+            aria-controls={`cov-${sdk.package}`}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            tabindex={i === 0 ? 0 : -1}
+            data-package={sdk.package}
+          >
+            <span class="num">{sdk.number}</span>
+            <span class="jp" lang="ja">
+              {sdk.kana}
+            </span>
+            <span class="pkg">{sdk.package}</span>
+          </button>
+        ))
+      }
+    </div>
+
+    {
+      tabs.map(({ sdk, coverage }, i) => (
+        <div role="tabpanel" id={`cov-${sdk.package}`} aria-labelledby={`tab-${sdk.package}`} hidden={i !== 0}>
+          {coverage ? (
+            <>
+              <dl class="stats">
+                {stats(coverage.stats).map(([label, value]) => (
+                  <div>
+                    <dt>{label.toUpperCase()}</dt>
+                    <dd>{value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <CoverageTable
+                client:visible
+                rows={coverage.rows}
+                groups={groupsFor(coverage.rows)}
+                labels={labels}
+                detailsUrl={`/data/coverage/${sdk.package}.json`}
+                sdkPackage={sdk.package}
+              />
+            </>
+          ) : (
+            <div class="lib">
+              <h2>{t(lang, 'coverage.libTitle')}</h2>
+              <p>{t(lang, 'coverage.libText')}</p>
+              {sdk.apiNotes && (
+                <a href={sdk.apiNotes} target="_blank" rel="noopener noreferrer">
+                  docs/api-notes.md ↗
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+      ))
+    }
+  </main>
+</Base>
+
+<script>
+  import { initTabs } from '../../../scripts/tabs';
+  initTabs();
+</script>
+
+<style>
+  .page {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 72px var(--page-gutter) 120px;
+  }
+  .intro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 48px;
+  }
+  .intro-text {
+    flex: 1 1 560px;
+    min-width: 0;
+    max-width: 780px;
+  }
+  .eyebrow {
+    font-size: var(--meta-size-lg);
+  }
+  h1 {
+    margin: 22px 0 0;
+    font-weight: 400;
+    font-size: 64px;
+    line-height: 1.05;
+  }
+  .lead {
+    margin: 26px 0 0;
+    font-size: 22px;
+    line-height: 1.55;
+    color: var(--body-soft);
+  }
+  .source {
+    display: inline-block;
+    margin-top: 18px;
+    padding: 10px 0;
+    font-family: var(--font-mono);
+    font-size: var(--meta-size-lg);
+    letter-spacing: 0.18em;
+    color: var(--secondary);
+  }
+  .vertical {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .vertical .jp {
+    writing-mode: vertical-rl;
+    font-size: 76px;
+  }
+  .vertical-label {
+    writing-mode: vertical-rl;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding-top: 6px;
+  }
+
+  .tabs {
+    margin-top: 64px;
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--divider);
+  }
+  [role='tab'] {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 16px 22px 14px 0;
+    margin: 0 22px -1px 0;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    color: var(--muted);
+    font: inherit;
+    cursor: pointer;
+  }
+  [role='tab'][aria-selected='true'] {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+  }
+  .num {
+    font-weight: 300;
+    font-size: 22px;
+    letter-spacing: 0.06em;
+  }
+  [role='tab'] .jp {
+    font-size: 17px;
+    line-height: inherit;
+  }
+  .pkg {
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .stats {
+    margin: 48px 0 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-left: 1px solid var(--divider);
+  }
+  .stats div {
+    padding: 4px 24px 8px;
+    border-right: 1px solid var(--divider);
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+  dt {
+    font-family: var(--font-mono);
+    font-size: var(--meta-size);
+    letter-spacing: var(--meta-tracking);
+    color: var(--muted);
+  }
+  dd {
+    margin: 0;
+    font-weight: 300;
+    font-size: 72px;
+    line-height: 0.9;
+    letter-spacing: 0.01em;
+  }
+
+  .lib {
+    margin-top: 56px;
+    max-width: 760px;
+  }
+  .lib h2 {
+    margin: 0;
+    font-weight: 500;
+    font-size: 34px;
+    line-height: 1.2;
+  }
+  .lib p {
+    margin: 20px 0 0;
+    font-size: 21px;
+    line-height: 1.6;
+    color: var(--body-soft);
+  }
+  .lib a {
+    display: inline-block;
+    margin-top: 18px;
+    padding: 10px 0;
+    font-family: var(--font-mono);
+    font-size: var(--meta-size-lg);
+    letter-spacing: 0.18em;
+    color: var(--secondary);
+  }
+
+  @media (max-width: 767px) {
+    .page {
+      padding-top: 40px;
+    }
+    h1 {
+      font-size: 44px;
+    }
+    .vertical {
+      display: none;
+    }
+    .stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      row-gap: 24px;
+    }
+    dd {
+      font-size: 52px;
+    }
+  }
+</style>

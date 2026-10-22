@@ -1,0 +1,135 @@
+---
+import Logo from './Logo.astro';
+import LangSwitch from './LangSwitch.astro';
+import GithubIcon from './GithubIcon.astro';
+import { sdks, type Sdk } from '../data/sdks';
+import { t, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+  sdk: Sdk;
+}
+
+const { lang, sdk } = Astro.props;
+---
+
+<header class="docs-header">
+  <div class="left">
+    <Logo lang={lang} size={38} />
+    <nav class="crumbs meta" aria-label={t(lang, 'nav.breadcrumb')}>
+      <a href={`/${lang}/`}>{t(lang, 'nav.docs.short').toUpperCase()}</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">{sdk.package.toUpperCase()}</span>
+    </nav>
+  </div>
+  <div class="right">
+    <nav class="tabs" aria-label="SDK">
+      {
+        sdks.map((s) => (
+          <a href={`/${lang}/docs/${s.package}/`} aria-current={s === sdk ? 'page' : undefined}>
+            <span class="num">{s.number}</span>
+            <span class="jp" lang="ja">
+              {s.kana}
+            </span>
+          </a>
+        ))
+      }
+    </nav>
+    <nav class="site-nav" aria-label={t(lang, 'nav.site')}>
+      <a href={`/${lang}/changelog/#${sdk.package}`}>{t(lang, 'nav.changelog').toUpperCase()}</a>
+      <a href={`/${lang}/about/`}>{t(lang, 'nav.about').toUpperCase()}</a>
+    </nav>
+    <div class="lang"><LangSwitch lang={lang} /></div>
+    <a class="github" href={sdk.github} target="_blank" rel="noopener noreferrer" aria-label={`${sdk.package} ${t(lang, 'nav.onGithub')}`}>
+      <GithubIcon />
+    </a>
+  </div>
+</header>
+
+<style>
+  .docs-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 32px;
+    padding: 24px var(--page-gutter);
+    border-bottom: 1px solid var(--divider);
+  }
+  .left,
+  .right {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .left {
+    gap: 28px;
+  }
+  .right {
+    gap: 4px;
+  }
+  .crumbs {
+    font-size: var(--meta-size-lg);
+    letter-spacing: 0.16em;
+  }
+  .crumbs a {
+    color: var(--muted);
+  }
+  .crumbs [aria-current] {
+    color: var(--ink);
+  }
+  .tabs {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-wrap: wrap;
+  }
+  .tabs a {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 12px 14px;
+    color: var(--secondary);
+    border-bottom: 1px solid transparent;
+  }
+  .tabs a[aria-current] {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+  }
+  .num {
+    font-weight: 300;
+    font-size: 17px;
+    letter-spacing: 0.06em;
+  }
+  .tabs .jp {
+    font-size: 15px;
+    line-height: inherit;
+  }
+  .site-nav {
+    display: flex;
+    align-items: center;
+    margin-left: 8px;
+    padding-left: 8px;
+    border-left: 1px solid var(--divider);
+    font-family: var(--font-mono);
+    font-size: var(--meta-size-lg);
+    letter-spacing: var(--meta-tracking);
+  }
+  .site-nav a {
+    padding: 14px 12px;
+    color: var(--secondary);
+  }
+  .lang {
+    margin-left: 8px;
+  }
+  .github {
+    margin-left: 12px;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--rule);
+    border-radius: 50%;
+  }
+</style>

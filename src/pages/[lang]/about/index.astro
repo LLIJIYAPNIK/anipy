@@ -1,0 +1,347 @@
+---
+import Base from '../../../layouts/Base.astro';
+import SiteHeader from '../../../components/SiteHeader.astro';
+import GithubIcon from '../../../components/GithubIcon.astro';
+import { owner, sdks } from '../../../data/sdks';
+import { langs, t, type Key, type Lang } from '../../../i18n';
+
+export const getStaticPaths = () => langs.map((lang) => ({ params: { lang } }));
+
+const lang = Astro.params.lang as Lang;
+const ownerName = owner.split('/').pop()!;
+
+const chapters: { number: string; title: Key; paragraphs: Key[] }[] = [
+  { number: 'I', title: 'about.whatTitle', paragraphs: ['about.what1', 'about.what2'] },
+  { number: 'II', title: 'about.whyTitle', paragraphs: ['about.why1', 'about.why2'] },
+];
+---
+
+<Base lang={lang} title={`${t(lang, 'nav.about')} — ANIPY`} description={t(lang, 'about.lead')}>
+  <SiteHeader lang={lang} current="about" />
+
+  <main>
+    <section class="hero">
+      <div class="hero-logo">
+        <img src="/logo-full.png" alt={t(lang, 'about.logoAlt')} width="600" height="600" />
+      </div>
+      <div class="hero-text">
+        <div class="hero-copy">
+          <div class="meta eyebrow">{t(lang, 'about.eyebrow')}</div>
+          <h1>{t(lang, 'about.title')}</h1>
+          <p class="lead">{t(lang, 'about.lead')}</p>
+          <div class="meta hero-meta">{t(lang, 'site.footer')}</div>
+        </div>
+        <span class="vertical" aria-hidden="true">
+          <span class="jp" lang="ja">概要</span>
+          <span class="vertical-label">{t(lang, 'nav.about')}</span>
+        </span>
+      </div>
+    </section>
+
+    {
+      chapters.map((c) => (
+        <section class="chapter">
+          <div class="chapter-head">
+            <div class="chapter-num">{c.number}</div>
+            <h2>{t(lang, c.title)}</h2>
+          </div>
+          <div class="chapter-body">
+            {c.paragraphs.map((p) => (
+              <p>{t(lang, p)}</p>
+            ))}
+          </div>
+        </section>
+      ))
+    }
+
+    <section class="chapter">
+      <div class="chapter-head">
+        <div class="chapter-num">III</div>
+        <h2>{t(lang, 'about.markTitle')}</h2>
+      </div>
+      <div class="chapter-body mark">
+        <img src="/logo.png" alt={t(lang, 'about.emblemAlt')} width="180" height="180" />
+        <div class="mark-text">
+          <p>
+            <span class="jp-inline" lang="ja">ア</span>
+            {t(lang, 'about.mark1a')}
+            <span class="jp-inline" lang="ja">アニメ</span>{t(lang, 'about.mark1b')}
+          </p>
+          <p>{t(lang, 'about.mark2')}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="collection">
+      <div class="meta eyebrow">{t(lang, 'about.collection')}</div>
+      <ul>
+        {
+          sdks.map((sdk) => (
+            <li>
+              <span class="c-num">{sdk.number}</span>
+              <span class="c-kana jp" lang="ja">
+                {sdk.kana}
+              </span>
+              <span class="c-text">
+                <span class="c-pkg">{sdk.package}</span>
+                <span class="c-desc">{sdk.description[lang]}</span>
+              </span>
+              <a class="c-docs" href={`/${lang}/docs/${sdk.package}/`}>
+                {t(lang, 'nav.docs').toUpperCase()} ↗
+              </a>
+              <a class="c-github" href={sdk.github} target="_blank" rel="noopener noreferrer" aria-label={`${sdk.package} ${t(lang, 'nav.onGithub')}`}>
+                <GithubIcon />
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  </main>
+
+  <footer class="foot meta">
+    <span>
+      {t(lang, 'about.maintained')}{' '}
+      <a href={owner} target="_blank" rel="noopener noreferrer">{ownerName.toUpperCase()} ↗</a>
+    </span>
+    <span>ANIPY.RU</span>
+  </footer>
+</Base>
+
+<style>
+  section,
+  .foot {
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+  .eyebrow {
+    font-size: var(--meta-size-lg);
+    letter-spacing: 0.22em;
+  }
+
+  .hero {
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--divider);
+  }
+  .hero-logo {
+    flex: 1 1 520px;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    border-right: 1px solid var(--divider);
+  }
+  .hero-logo img {
+    display: block;
+    width: 100%;
+    max-width: 600px;
+    height: auto;
+  }
+  .hero-text {
+    flex: 1 1 480px;
+    min-width: 0;
+    padding: 96px 80px 72px;
+    display: flex;
+    gap: 48px;
+  }
+  .hero-copy {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  h1 {
+    margin: 28px 0 0;
+    font-weight: 400;
+    font-size: 60px;
+    line-height: 1.05;
+    letter-spacing: -0.005em;
+  }
+  .lead {
+    margin: 32px 0 0;
+    max-width: 480px;
+    font-size: 21px;
+    line-height: 1.55;
+    color: var(--body-soft);
+  }
+  .hero-meta {
+    margin-top: auto;
+    padding-top: 48px;
+  }
+  .vertical {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .vertical .jp {
+    writing-mode: vertical-rl;
+    font-size: var(--jp-size);
+  }
+  .vertical-label {
+    writing-mode: vertical-rl;
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding-top: 6px;
+  }
+
+  .chapter {
+    padding: 96px var(--page-gutter);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 48px 80px;
+    border-bottom: 1px solid var(--divider);
+  }
+  .chapter-head {
+    flex: 1 1 300px;
+    min-width: 0;
+  }
+  .chapter-num {
+    font-weight: 300;
+    font-size: 88px;
+    line-height: 0.85;
+    letter-spacing: 0.04em;
+  }
+  h2 {
+    margin: 28px 0 0;
+    font-weight: 500;
+    font-size: 34px;
+  }
+  .chapter-body {
+    flex: 2 1 560px;
+    min-width: 0;
+    max-width: 760px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    font-size: 21px;
+    line-height: 1.6;
+    color: var(--body-soft);
+  }
+  .chapter-body p {
+    margin: 0;
+  }
+  .mark {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 32px 48px;
+  }
+  .mark img {
+    flex: 0 0 auto;
+    display: block;
+    width: 180px;
+    height: 180px;
+  }
+  .mark-text {
+    flex: 1 1 320px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .jp-inline {
+    font-family: var(--font-jp);
+    font-weight: 800;
+    color: var(--ink);
+  }
+
+  .collection {
+    padding: 96px var(--page-gutter) 56px;
+  }
+  .collection ul {
+    list-style: none;
+    margin: 28px 0 0;
+    padding: 0;
+    border-top: 1px solid var(--divider);
+  }
+  .collection li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 40px;
+    padding: 28px 0;
+    border-bottom: 1px solid var(--divider);
+  }
+  .c-num {
+    flex: 0 0 72px;
+    font-weight: 300;
+    font-size: 44px;
+    line-height: 1;
+    letter-spacing: 0.04em;
+  }
+  .c-kana {
+    flex: 0 0 140px;
+    font-size: 34px;
+  }
+  .c-text {
+    flex: 1 1 320px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .c-pkg {
+    font-family: var(--font-mono);
+    font-size: 15px;
+  }
+  .c-desc {
+    font-size: 18px;
+    line-height: 1.45;
+    color: var(--secondary);
+  }
+  .c-docs {
+    font-family: var(--font-mono);
+    font-size: var(--meta-size-lg);
+    letter-spacing: var(--meta-tracking);
+    padding: 14px 0;
+  }
+  .c-github {
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--rule);
+    border-radius: 50%;
+  }
+
+  .foot {
+    padding: 40px var(--page-gutter) 56px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+  .foot a {
+    display: inline-block;
+    padding: 14px 0;
+  }
+
+  @media (max-width: 767px) {
+    .hero-logo {
+      border-right: 0;
+      border-bottom: 1px solid var(--divider);
+    }
+    .hero-text {
+      padding: 48px var(--page-gutter);
+    }
+    .vertical {
+      display: none;
+    }
+    h1 {
+      font-size: 42px;
+    }
+    .chapter {
+      padding: 64px var(--page-gutter);
+    }
+    .chapter-num {
+      font-size: 64px;
+    }
+  }
+</style>

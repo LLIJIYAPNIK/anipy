@@ -1,0 +1,327 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import SiteHeader from '../../../components/SiteHeader.astro';
+import { changelogUrl, sdks, sdkDir } from '../../../data/sdks';
+import { parseChangelog, type Kind } from '../../../lib/changelog';
+import { langs, t, type Lang } from '../../../i18n';
+
+export const getStaticPaths = () => langs.map((lang) => ({ params: { lang } }));
+
+const lang = Astro.params.lang as Lang;
+
+// Как в макете: последние релизы на странице, остальные — в полном CHANGELOG.md.
+const shown = 5;
+
+const files = await getCollection('sdkDocs', (e) => e.filePath?.endsWith('/CHANGELOG.md'));
+const logs = sdks.map((sdk) => {
+  const body = files.find((e) => e.filePath === `${sdkDir(sdk)}/CHANGELOG.md`)?.body ?? '';
+  const releases = parseChangelog(body);
+  const earlier = releases.slice(shown);
+  return { sdk, releases: releases.slice(0, shown), earlier };
+});
+
+const kindLabel = (kind: Kind) => t(lang, `changelog.${kind}`).toUpperCase();
+const earlierText = (n: number, from: string, to: string) =>
+  t(lang, 'changelog.earlier').replace('{n}', String(n)).replace('{from}', from).replace('{to}', to);
+---
+
+<Base lang={lang} title={`${t(lang, 'changelog.title')} — ANIPY`} description={t(lang, 'changelog.lead')}>
+  <SiteHeader lang={lang} current="changelog" />
+
+  <main class="page">
+    <div class="intro">
+      <div class="intro-text">
+        <div class="meta eyebrow">{t(lang, 'changelog.eyebrow')}</div>
+        <h1>{t(lang, 'changelog.title')}</h1>
+        <p class="lead">{t(lang, 'changelog.lead')}</p>
+      </div>
+      <span class="vertical" aria-hidden="true">
+        <span class="jp" lang="ja">更新</span>
+        <span class="vertical-label">{t(lang, 'changelog.vertical')}</span>
+      </span>
+    </div>
+
+    <div class="tabs" role="tablist">
+      {
+        logs.map(({ sdk, releases }, i) => (
+          <button
+            type="button"
+            role="tab"
+            id={`tab-${sdk.package}`}
+            aria-controls={`log-${sdk.package}`}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            tabindex={i === 0 ? 0 : -1}
+            data-package={sdk.package}
+          >
+            <span class="num">{sdk.number}</span>
+            <span class="jp" lang="ja">
+              {sdk.kana}
+            </span>
+            <span class="pkg">{sdk.package}</span>
+            {releases[0] && <span class="ver">v{releases[0].version}</span>}
+          </button>
+        ))
+      }
+    </div>
+
+    {
+      logs.map(({ sdk, releases, earlier }, i) => (
+        <div class="log" role="tabpanel" id={`log-${sdk.package}`} aria-labelledby={`tab-${sdk.package}`} hidden={i !== 0}>
+          <ol lang="en">
+            {releases.map((release, r) => (
+              <li class="release">
+                <div class="release-head">
+                  <h2>{release.version}</h2>
+                  <div class="release-meta">
+                    <time datetime={release.date}>{release.date}</time>
+                    {r === 0 && <span class="latest" lang={lang}>{t(lang, 'changelog.latest').toUpperCase()}</span>}
+                  </div>
+                </div>
+                <div class="release-body">
+                  {release.sections.map((section) => (
+                    <section>
+                      <h3 class:list={{ breaking: section.kind === 'breaking' }} lang={lang}>
+                        {kindLabel(section.kind)}
+                      </h3>
+                      <ul>
+                        {section.items.map((item) => (
+                          <li>
+                            <span class="dash" aria-hidden="true">
+                              —
+                            </span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ol>
+          <div class="log-foot">
+            {earlier.length > 0 && <span class="earlier">{earlierText(earlier.length, earlier.at(-1)!.version, earlier[0].version)}</span>}
+            <a href={changelogUrl(sdk)} target="_blank" rel="noopener noreferrer">
+              CHANGELOG.md ↗
+            </a>
+          </div>
+        </div>
+      ))
+    }
+  </main>
+</Base>
+
+<script>
+  import { initTabs } from '../../../scripts/tabs';
+  initTabs();
+</script>
+
+<style>
+  .page {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 72px var(--page-gutter) 120px;
+  }
+  .intro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 48px;
+  }
+  .intro-text {
+    flex: 1 1 560px;
+    min-width: 0;
+    max-width: 780px;
+  }
+  .eyebrow {
+    font-size: var(--meta-size-lg);
+  }
+  h1 {
+    margin: 22px 0 0;
+    font-weight: 400;
+    font-size: 64px;
+    line-height: 1.05;
+  }
+  .lead {
+    margin: 26px 0 0;
+    font-size: 22px;
+    line-height: 1.55;
+    color: var(--body-soft);
+  }
+  .vertical {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .vertical .jp {
+    writing-mode: vertical-rl;
+    font-size: 76px;
+  }
+  .vertical-label {
+    writing-mode: vertical-rl;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding-top: 6px;
+  }
+
+  .tabs {
+    margin-top: 64px;
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--divider);
+  }
+  [role='tab'] {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 16px 0 14px;
+    margin: 0 44px -1px 0;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    color: var(--muted);
+    font: inherit;
+    cursor: pointer;
+  }
+  [role='tab'][aria-selected='true'] {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+  }
+  .num {
+    font-weight: 300;
+    font-size: 22px;
+    letter-spacing: 0.06em;
+  }
+  [role='tab'] .jp {
+    font-size: 17px;
+    line-height: inherit;
+  }
+  .pkg {
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .ver {
+    font-family: var(--font-mono);
+    font-size: var(--meta-size);
+    color: var(--muted);
+  }
+
+  ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .release {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px 64px;
+    padding: 56px 0;
+    border-bottom: 1px solid var(--divider);
+  }
+  .release-head {
+    flex: 0 1 280px;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  h2 {
+    margin: 0;
+    font-weight: 300;
+    font-size: 60px;
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+  }
+  .release-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    font-family: var(--font-mono);
+    font-size: var(--meta-size-lg);
+    letter-spacing: 0.14em;
+    color: var(--muted);
+  }
+  .latest {
+    padding: 2px 6px;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+  }
+  .release-body {
+    flex: 1 1 560px;
+    min-width: 0;
+    max-width: 820px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  h3 {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: var(--meta-size);
+    letter-spacing: 0.22em;
+    color: var(--muted);
+  }
+  h3.breaking {
+    color: var(--ink);
+  }
+  ul {
+    list-style: none;
+    margin: 14px 0 0;
+    padding: 0;
+    border-top: 1px solid var(--rule-faint);
+  }
+  ul li {
+    display: flex;
+    gap: 16px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--rule-faint);
+    font-size: 19px;
+    line-height: 1.45;
+    color: var(--body-soft);
+  }
+  .dash {
+    flex: 0 0 auto;
+    color: var(--scroll-thumb-hover);
+  }
+  .log-foot {
+    margin-top: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .earlier {
+    font-size: 20px;
+    font-style: italic;
+    color: var(--secondary);
+  }
+  .log-foot a {
+    padding: 10px 0;
+    font-family: var(--font-mono);
+    font-size: var(--meta-size-lg);
+    letter-spacing: var(--meta-tracking);
+    color: var(--secondary);
+  }
+
+  @media (max-width: 767px) {
+    .page {
+      padding-top: 40px;
+    }
+    h1 {
+      font-size: 44px;
+    }
+    .vertical {
+      display: none;
+    }
+    h2 {
+      font-size: 44px;
+    }
+  }
+</style>

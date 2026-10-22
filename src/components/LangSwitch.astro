@@ -1,0 +1,54 @@
+---
+import { switchLang, t, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+---
+
+<nav class="lang" aria-label={t(lang, 'nav.lang')}>
+  {
+    lang === 'en' ? (
+      <span aria-current="true">EN</span>
+    ) : (
+      <a href={switchLang(Astro.url.pathname, 'en')} hreflang="en" lang="en">
+        EN
+      </a>
+    )
+  }
+  <span class="slash" aria-hidden="true">/</span>
+  {
+    lang === 'ru' ? (
+      <span aria-current="true">RU</span>
+    ) : (
+      <a href={switchLang(Astro.url.pathname, 'ru')} hreflang="ru" lang="ru">
+        RU
+      </a>
+    )
+  }
+</nav>
+
+<style>
+  .lang {
+    display: flex;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: var(--meta-size-lg);
+    letter-spacing: 0.18em;
+  }
+  a,
+  [aria-current] {
+    display: inline-flex;
+    align-items: center;
+    height: var(--tap-min);
+    padding: 0 8px;
+  }
+  a {
+    color: var(--muted);
+  }
+  .slash {
+    color: var(--rule);
+  }
+</style>

@@ -1,0 +1,58 @@
+/* Spec V1 + значения из макета. Единственное место, где задаются цвета, шрифты и тайминги. */
+:root {
+  --ground: #000000;
+  --row-open: #080808;
+  --code-bg: #0a0a0a;
+  --panel-hover: #111111;
+  --rule-faint: #1a1a1a;
+  --divider: #292929;
+  --rule: #3a3a3a;
+  --scroll-thumb-hover: #5a5a5a;
+  --muted: #8c8c8c;
+  --secondary: #a6a6a6;
+  --tertiary: #b3b3b3;
+  --body-soft: #d9d9d9;
+  --ink: #f5f5f5;
+
+  --font-jp: 'Shippori Mincho', serif;
+  --font-latin: 'Cormorant Garamond', 'EB Garamond', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --jp-size: 86px;
+  --jp-size-docs: 56px;
+  --meta-size: 10px;
+  --meta-size-lg: 11px;
+  --meta-tracking: 0.2em;
+
+  --page-gutter: 56px;
+  --panels-top: 100px;
+  --panels-right: 72px;
+  --intro-width: 576px;
+  --tap-min: 44px;
+
+  --ease: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --panel-duration: 560ms;
+  --reveal-in: 420ms;
+  --reveal-delay: 180ms;
+  --reveal-out: 160ms;
+  --toc-duration: 360ms;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --jp-size: 62px;
+    --page-gutter: 20px;
+    --tap-min: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --panel-duration: 0ms;
+    --reveal-in: 0ms;
+    --reveal-delay: 0ms;
+    --reveal-out: 0ms;
+    --toc-duration: 0ms;
+  }
+}

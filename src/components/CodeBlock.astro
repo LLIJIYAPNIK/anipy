@@ -1,0 +1,85 @@
+---
+import { Code } from 'astro:components';
+import { grayscale } from '../lib/grayscale-theme';
+import { t, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+  caption: string;
+  copyLabel: string;
+  /** Текст, который копирует кнопка. */
+  copy: string;
+  /** Python-код подсвечивается; без него — содержимое слота как есть. */
+  code?: string;
+}
+
+const { lang, caption, copyLabel, copy, code } = Astro.props;
+---
+
+<figure class="code">
+  <figcaption>
+    <span class="meta">{caption}</span>
+    <button class="copy meta" type="button" aria-label={copyLabel} data-copy={copy} data-done={t(lang, 'docs.copied').toUpperCase()}>
+      <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
+        <rect x="5" y="5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.1"></rect>
+        <path d="M11 5V2H2v9h3" fill="none" stroke="currentColor" stroke-width="1.1"></path>
+      </svg>
+      <span aria-live="polite">{t(lang, 'docs.copy').toUpperCase()}</span>
+    </button>
+  </figcaption>
+  {code ? <Code code={code} lang="python" theme={grayscale} /> : <pre><slot /></pre>}
+</figure>
+
+<script>
+  for (const button of document.querySelectorAll<HTMLButtonElement>('.copy')) {
+    const label = button.querySelector('[aria-live]')!;
+    const idle = label.textContent;
+    button.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(button.dataset.copy ?? '');
+      label.textContent = button.dataset.done ?? idle;
+      setTimeout(() => (label.textContent = idle), 1600);
+    });
+  }
+</script>
+
+<style>
+  figure {
+    margin: 24px 0 0;
+  }
+  figcaption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .copy {
+    height: 36px;
+    margin-bottom: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    background: transparent;
+    border: 1px solid var(--divider);
+    color: var(--secondary);
+    cursor: pointer;
+  }
+  .copy:hover {
+    color: var(--ink);
+  }
+  figure :global(pre) {
+    margin: 0;
+    padding: 20px 24px;
+    border: 1px solid var(--divider);
+    background: var(--code-bg) !important;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', Consolas, ui-monospace, monospace;
+    font-size: 14px;
+    line-height: 1.7;
+    font-variant-ligatures: none;
+    color: var(--ink);
+  }
+  figure :global(pre code) {
+    font: inherit;
+  }
+</style>
