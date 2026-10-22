@@ -52,6 +52,7 @@ src/
   components/
   pages/[lang]/         # /en/…, /ru/…: главная, docs/<package>/, examples/, changelog/, coverage/ (#<package> — вкладка), about/
   pages/data/coverage/  # статический JSON подробностей операций для таблицы покрытия
+  pages/404.astro, 500.astro # одна страница на весь сайт, оба языка (components/ErrorPage.astro); 500.html отдаёт сервер
 public/logo.png         # знак ア в энсо из макета; logo-full.png — с надписью, для About
 scripts/sync-sdk.mjs    # клонирует репозитории из sdks.ts в .sdk/
 .sdk/                   # клоны репозиториев SDK для сборки, в git не попадает
