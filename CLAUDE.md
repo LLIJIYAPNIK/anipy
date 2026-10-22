@@ -64,6 +64,11 @@ scripts/sync-sdk.mjs    # клонирует репозитории из sdks.ts
 - Клоны в `.sdk/` на Windows приходят с CRLF: разбирая markdown, сначала нормализуй переводы строк.
 - Стили, задевающие разметку дочернего компонента через `:has()`, пиши как `:global(...)` целиком: Astro не разворачивает `:global()` внутри `:has()`.
 
+## CI и деплой
+
+- `.github/workflows/ci.yml` — `sync`, `check`, `build` на каждый PR и push в `main`.
+- `.github/workflows/deploy.yml` — сборка и rsync `dist/` на VPS при push в `main`, вручную и по `repository_dispatch: sdk-release` из репозиториев SDK. Настройка сервера и секреты — `docs/deploy.md`, конфиг nginx — `deploy/nginx/anipy.ru.conf`.
+
 ## Команды
 
 ```bash
