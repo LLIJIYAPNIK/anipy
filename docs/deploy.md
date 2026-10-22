@@ -87,7 +87,23 @@ sudo ln -s /etc/nginx/sites-available/anipy.ru /etc/nginx/sites-enabled/anipy.ru
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-certbot продлевает сертификат сам.
+certbot продлевает сертификат сам: проверка идёт по HTTP на порту 80, общий 443 ей не мешает.
+
+### Общий порт 443 с VPN
+
+На сервере 443 занимает VPN (`amnezia-xray`), поэтому сайт не слушает его напрямую. Порт 443 по TCP слушает nginx в режиме `stream` ([`deploy/nginx/stream-443.conf`](../deploy/nginx/stream-443.conf)): по имени сайта из TLS (SNI) `anipy.ru` уходит на `127.0.0.1:8443`, где его ждёт `anipy.ru.conf`, всё остальное — в VPN на `127.0.0.1:4443`. UDP 443 остаётся за VPN.
+
+```bash
+sudo apt install libnginx-mod-stream
+sudo mkdir -p /etc/nginx/streams-enabled
+sudo cp deploy/nginx/stream-443.conf /etc/nginx/streams-enabled/443.conf
+# Блок stream — верхнего уровня: include в самом конце nginx.conf, вне http {}.
+echo 'include /etc/nginx/streams-enabled/*.conf;' | sudo tee -a /etc/nginx/nginx.conf
+```
+
+Контейнер VPN при этом публикуется только на localhost: `-p 127.0.0.1:4443:443/tcp -p 443:443/udp` вместо `-p 443:443/tcp`. Пока он держит `0.0.0.0:443`, nginx этот порт не получит и `nginx -t` пройдёт, а `systemctl restart nginx` — нет. Если переустановить протокол через приложение Amnezia, оно вернёт старую публикацию — тогда контейнер нужно пересоздать снова.
+
+Реальный IP посетителя сайта при такой схеме до nginx сайта не доходит — для статики это неважно.
 
 ## 6. Первая выкладка
 
