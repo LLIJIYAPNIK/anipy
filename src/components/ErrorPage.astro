@@ -1,0 +1,309 @@
+---
+// Страницы 404 и 500 по артбордам макета. Хостинг отдаёт один файл на весь сайт,
+// поэтому в нём оба языка: нужный выбирается по адресу (/en/…) или переключателем.
+import Base from '../layouts/Base.astro';
+import { owner, sdks } from '../data/sdks';
+import { langs, t, type Lang } from '../i18n';
+
+interface Props {
+  code: 404 | 500;
+  kana: string;
+}
+
+const { code, kana } = Astro.props;
+const meta = code === 404 ? 'NOT FOUND · 404' : 'SERVER ERROR · 500';
+
+type Action = { label: string; href?: string; retry?: boolean; arrow?: string; primary?: boolean; external?: boolean };
+
+const actions = (lang: Lang): Action[] =>
+  code === 404
+    ? [
+        { href: `/${lang}/`, label: t(lang, 'error.404.home').toUpperCase(), arrow: '→', primary: true },
+        { href: `/${lang}/docs/${sdks[0].package}/`, label: t(lang, 'nav.docs').toUpperCase() },
+        { href: `/${lang}/examples/`, label: t(lang, 'nav.examples').toUpperCase() },
+      ]
+    : [
+        { retry: true, label: t(lang, 'error.500.retry').toUpperCase(), arrow: '↻', primary: true },
+        { href: `/${lang}/`, label: t(lang, 'error.500.home').toUpperCase() },
+        { href: owner, label: 'GITHUB ↗', external: true },
+      ];
+---
+
+<Base lang="ru" title={`${code} — ANIPY`}>
+  <div class="error-page">
+    <header class="brand">
+      <a href="/ru/" class="logo" data-home aria-label="anipy">
+        <img src="/logo.png" alt="" width="42" height="42" />
+        <span>anipy</span>
+      </a>
+    </header>
+
+    <div class="lang-switch" role="group" aria-label={t('ru', 'nav.lang')}>
+      <button type="button" data-set-lang="en" aria-pressed="false">EN</button>
+      <span aria-hidden="true">/</span>
+      <button type="button" data-set-lang="ru" aria-pressed="true">RU</button>
+    </div>
+
+    {
+      langs.map((lang) => (
+        <main class="content" data-lang={lang} lang={lang} hidden={lang !== 'ru'}>
+          <div class="meta eyebrow">{t(lang, 'error.eyebrow')}</div>
+          <div class="code" aria-hidden="true">
+            {code}
+          </div>
+          <h1>{t(lang, `error.${code}.title`)}</h1>
+          <p class="body">{t(lang, `error.${code}.body`)}</p>
+          <nav class="actions" aria-label={t(lang, 'error.nav')}>
+            {actions(lang).map((a) =>
+              a.retry ? (
+                <button type="button" class="go primary" data-retry>
+                  {a.label} <span aria-hidden="true">{a.arrow}</span>
+                </button>
+              ) : (
+                <a
+                  class:list={['go', { primary: a.primary }]}
+                  href={a.href}
+                  {...(a.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                >
+                  {a.label} {a.arrow && <span aria-hidden="true">{a.arrow}</span>}
+                </a>
+              ),
+            )}
+          </nav>
+        </main>
+      ))
+    }
+
+    <div class="panel" aria-hidden="true">
+      <div class="panel-title">
+        <span class="jp" lang="ja">{kana}</span>
+        {
+          langs.map((lang) => (
+            <span class="panel-label" data-lang={lang} hidden={lang !== 'ru'}>
+              {t(lang, `error.${code}.vertical`)}
+            </span>
+          ))
+        }
+      </div>
+      <div class="panel-meta">{meta}</div>
+    </div>
+  </div>
+</Base>
+
+<script>
+  const root = document.documentElement;
+  const apply = (lang: string) => {
+    root.lang = lang;
+    for (const el of document.querySelectorAll<HTMLElement>('[data-lang]')) el.hidden = el.dataset.lang !== lang;
+    for (const b of document.querySelectorAll<HTMLButtonElement>('[data-set-lang]')) {
+      b.setAttribute('aria-pressed', String(b.dataset.setLang === lang));
+    }
+    document.querySelector<HTMLAnchorElement>('[data-home]')!.href = `/${lang}/`;
+  };
+  apply(location.pathname.startsWith('/en/') ? 'en' : 'ru');
+  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-set-lang]')) {
+    b.addEventListener('click', () => apply(b.dataset.setLang!));
+  }
+  for (const b of document.querySelectorAll('[data-retry]')) b.addEventListener('click', () => location.reload());
+</script>
+
+<style>
+  /* Язык: по умолчанию русский; скрипт переключает hidden у [data-lang]. */
+  [hidden] {
+    display: none !important;
+  }
+
+  .error-page {
+    position: relative;
+    min-height: max(100vh, 760px);
+    overflow: hidden;
+  }
+  .brand {
+    position: absolute;
+    top: 34px;
+    left: var(--page-gutter);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .logo img {
+    display: block;
+  }
+  .logo span {
+    font-size: 23px;
+    letter-spacing: 0.44em;
+  }
+  .lang-switch {
+    position: absolute;
+    top: 34px;
+    right: var(--page-gutter);
+    height: var(--tap-min);
+    display: flex;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: var(--meta-size-lg);
+    letter-spacing: 0.18em;
+  }
+  .lang-switch button {
+    height: var(--tap-min);
+    padding: 0 8px;
+    background: transparent;
+    border: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .lang-switch button[aria-pressed='true'] {
+    color: var(--ink);
+  }
+  .lang-switch span {
+    color: var(--rule);
+  }
+
+  .content {
+    position: absolute;
+    left: 88px;
+    top: 190px;
+    width: 760px;
+    max-width: calc(100% - 88px - var(--page-gutter));
+    display: flex;
+    flex-direction: column;
+  }
+  .eyebrow {
+    font-size: var(--meta-size-lg);
+    letter-spacing: 0.22em;
+  }
+  .code {
+    margin-top: 8px;
+    font-weight: 300;
+    font-size: 260px;
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+  }
+  h1 {
+    margin: 28px 0 0;
+    font-weight: 400;
+    font-size: 44px;
+    line-height: 1.15;
+  }
+  .body {
+    margin: 18px 0 0;
+    max-width: 540px;
+    font-size: 20px;
+    line-height: 1.55;
+    color: var(--secondary);
+  }
+  .actions {
+    margin-top: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .go {
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 20px;
+    background: transparent;
+    border: 1px solid var(--divider);
+    color: var(--body-soft);
+    font-family: var(--font-mono);
+    font-size: var(--meta-size-lg);
+    letter-spacing: var(--meta-tracking);
+    cursor: pointer;
+  }
+  .go.primary {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  .go:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  .panel {
+    position: absolute;
+    top: var(--panels-top);
+    bottom: 0;
+    right: var(--panels-right);
+    width: 300px;
+    border-left: 1px solid var(--divider);
+    border-right: 1px solid var(--divider);
+    background: var(--error-panel);
+  }
+  .panel-title {
+    position: absolute;
+    top: 0;
+    right: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 22px;
+  }
+  .panel-title .jp {
+    writing-mode: vertical-rl;
+    font-size: 120px;
+  }
+  .panel-label {
+    writing-mode: vertical-rl;
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .panel-meta {
+    position: absolute;
+    left: 28px;
+    bottom: 40px;
+    font-family: var(--font-mono);
+    font-size: var(--meta-size);
+    letter-spacing: var(--meta-tracking);
+    color: var(--scroll-thumb-hover);
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+  @media (max-width: 1240px) {
+    .panel {
+      display: none;
+    }
+  }
+  @media (max-width: 767px) {
+    .error-page {
+      min-height: 100vh;
+    }
+    .brand {
+      top: 18px;
+    }
+    .logo {
+      gap: 14px;
+    }
+    .logo img {
+      width: 36px;
+      height: 36px;
+    }
+    .logo span {
+      font-size: 20px;
+    }
+    .lang-switch {
+      top: 18px;
+      right: 12px;
+    }
+    .content {
+      left: var(--page-gutter);
+      top: 120px;
+      max-width: calc(100% - 2 * var(--page-gutter));
+    }
+    .code {
+      font-size: 140px;
+    }
+    h1 {
+      font-size: 32px;
+    }
+    .body {
+      font-size: 18px;
+    }
+  }
+</style>
