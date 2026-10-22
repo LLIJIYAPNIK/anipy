@@ -23,6 +23,10 @@ export type Sdk = {
   quickstartIntro?: Text;
   /** Справочник API из макета; без него раздела нет. */
   api?: { name: string; description: Text }[];
+  /** Пути внутри каталога SDK для страницы покрытия API; без них — заглушка. */
+  coverage?: { api: string; endpoints: string; spec: string; source: string };
+  /** Заметки об API, когда публичной спецификации нет. */
+  apiNotes?: string;
 };
 
 export const sdks: readonly Sdk[] = [
@@ -50,6 +54,7 @@ export const sdks: readonly Sdk[] = [
       { name: 'client.releases.get(alias)', description: { ru: 'Релиз по его алиасу.', en: 'A release by its alias.' } },
       { name: 'client.episodes.get(id)', description: { ru: 'Эпизод с HLS-ссылками (hls_1080, hls_720).', en: 'An episode with HLS links (hls_1080, hls_720).' } },
     ],
+    coverage: { api: 'AniLibria API v1', endpoints: 'docs/endpoints.md', spec: 'spec/openapi.json', source: 'src/aniliberty' },
   },
   {
     number: 'II',
@@ -65,6 +70,7 @@ export const sdks: readonly Sdk[] = [
     license: 'MIT',
     github: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/tree/main/packages/ranobelib',
     repo: { url: 'https://github.com/LLIJIYAPNIK/libsocial-sdk.git', dir: 'libsocial-sdk', path: 'packages/ranobelib' },
+    apiNotes: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/blob/main/docs/api-notes.md',
   },
   {
     number: 'III',
@@ -80,6 +86,7 @@ export const sdks: readonly Sdk[] = [
     license: 'MIT',
     github: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/tree/main/packages/mangalib',
     repo: { url: 'https://github.com/LLIJIYAPNIK/libsocial-sdk.git', dir: 'libsocial-sdk', path: 'packages/mangalib' },
+    apiNotes: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/blob/main/docs/api-notes.md',
   },
 ];
 

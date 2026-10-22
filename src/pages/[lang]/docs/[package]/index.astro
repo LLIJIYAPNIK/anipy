@@ -5,6 +5,7 @@ import DocsHeader from '../../../../components/DocsHeader.astro';
 import CodeBlock from '../../../../components/CodeBlock.astro';
 import { sdks, sdkDir, type Sdk } from '../../../../data/sdks';
 import { readmeParts } from '../../../../lib/readme';
+import { loadCoverage } from '../../../../lib/coverage';
 import { langs, t, type Key, type Lang } from '../../../../i18n';
 
 export const getStaticPaths = () =>
@@ -28,6 +29,8 @@ const index = sdks.indexOf(sdk);
 const others = [...sdks.slice(index + 1), ...sdks.slice(0, index)];
 const orLabel = t(lang, 'docs.or');
 const changelogHref = `/${lang}/changelog/#${sdk.package}`;
+const coverage = loadCoverage(sdk);
+const coverageHref = `/${lang}/coverage/#${sdk.package}`;
 ---
 
 <Base lang={lang} title={`${sdk.package} — ANIPY`} description={sdk.description[lang]}>
@@ -49,6 +52,7 @@ const changelogHref = `/${lang}/changelog/#${sdk.package}`;
         </div>
         <div class="group">
           <span class="meta group-title">{t(lang, 'docs.more').toUpperCase()}</span>
+          {coverage && <a class="more" href={coverageHref}>{t(lang, 'nav.coverage')}</a>}
           <a class="more" href={changelogHref}>{t(lang, 'docs.changelog')}</a>
         </div>
       </nav>
@@ -121,6 +125,15 @@ const changelogHref = `/${lang}/changelog/#${sdk.package}`;
                   </tbody>
                 </table>
               </div>
+              {coverage && (
+                <a class="coverage-card" href={coverageHref}>
+                  <span class="coverage-text">
+                    <span class="meta">{t(lang, 'nav.coverage').toUpperCase()}</span>
+                    <span class="coverage-title">{t(lang, 'coverage.card').replace('{n}', String(coverage.stats.total))}</span>
+                  </span>
+                  <span class="coverage-arrow" aria-hidden="true">→</span>
+                </a>
+              )}
             </section>
           )
         }
@@ -352,6 +365,31 @@ const changelogHref = `/${lang}/changelog/#${sdk.package}`;
     font-size: 13px;
     white-space: nowrap;
     color: var(--ink);
+  }
+  .coverage-card {
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 24px 28px;
+    border: 1px solid var(--divider);
+  }
+  .coverage-card:hover {
+    border-color: var(--rule);
+    background: var(--row-open);
+  }
+  .coverage-text {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .coverage-title {
+    font-size: 22px;
+    line-height: 1.35;
+  }
+  .coverage-arrow {
+    font-size: 26px;
   }
   .others {
     margin-top: 88px;
