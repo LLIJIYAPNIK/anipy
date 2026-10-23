@@ -81,6 +81,7 @@ const id = `sdk-${sdk.package}`;
     background-color: var(--ground);
     transition:
       flex-grow var(--panel-duration) var(--ease),
+      flex-basis var(--panel-duration) var(--ease),
       background-color var(--panel-duration);
   }
   .panel:hover,
@@ -93,16 +94,16 @@ const id = `sdk-${sdk.package}`;
     z-index: 1;
   }
   .panel-link:focus-visible {
-    outline-offset: -10px;
+    outline-offset: -0.625rem;
   }
   .title {
     position: absolute;
     top: 0;
-    right: 20px;
+    right: 1.25rem;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 20px;
+    gap: 1.25rem;
     pointer-events: none;
   }
   .kana {
@@ -112,20 +113,21 @@ const id = `sdk-${sdk.package}`;
   }
   .label {
     writing-mode: vertical-rl;
-    font-size: 13px;
+    font-size: 0.8125rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     margin-right: 1px;
   }
   .details {
     position: absolute;
-    left: 36px;
-    top: 260px;
-    width: 272px;
+    left: 2.25rem;
+    top: 16.25rem;
+    /* Справа — колонка каны, текст до неё не доходит. */
+    width: min(20rem, calc(100% - 9.5rem));
     z-index: 2;
     pointer-events: none;
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(0.75rem);
     transition:
       opacity var(--reveal-out),
       transform var(--reveal-out);
@@ -139,50 +141,51 @@ const id = `sdk-${sdk.package}`;
       transform var(--panel-duration) var(--ease-out) var(--reveal-delay);
   }
   .details .meta {
+    font-size: var(--meta-size-lg);
     letter-spacing: 0.22em;
   }
   .package {
-    margin-top: 14px;
+    margin-top: 0.875rem;
     font-family: var(--font-mono);
-    font-size: 15px;
+    font-size: 1.0625rem;
     letter-spacing: 0.01em;
   }
   .rule {
-    width: 28px;
+    width: 1.75rem;
     height: 1px;
-    margin: 22px 0;
+    margin: 1.375rem 0;
     background: var(--rule);
   }
   .description {
     margin: 0;
-    font-size: 19px;
+    font-size: 1.3125rem;
     line-height: 1.45;
   }
   .facts {
-    margin-top: 18px;
+    margin-top: 1.125rem;
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 16px;
+    gap: 0.375rem 1rem;
     font-family: var(--font-mono);
     font-size: var(--meta-size-lg);
     color: var(--muted);
   }
   .actions {
-    margin-top: 36px;
+    margin-top: 2.25rem;
     display: flex;
     align-items: center;
-    gap: 22px;
+    gap: 1.375rem;
   }
   .docs-cta {
     font-family: var(--font-mono);
     font-size: var(--meta-size-lg);
     letter-spacing: var(--meta-tracking);
-    padding-bottom: 5px;
+    padding-bottom: 0.3125rem;
     border-bottom: 1px solid var(--ink);
   }
   .github {
-    width: 44px;
-    height: 44px;
+    width: 2.75rem;
+    height: 2.75rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -220,7 +223,7 @@ const id = `sdk-${sdk.package}`;
       position: relative;
       display: block;
       width: 100%;
-      height: 212px;
+      height: 13.25rem;
       padding: 0;
       overflow: hidden;
       background: transparent;
@@ -232,21 +235,21 @@ const id = `sdk-${sdk.package}`;
     }
     .acc-head {
       position: absolute;
-      left: 20px;
-      top: 26px;
+      left: 1.25rem;
+      top: 1.625rem;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 0.625rem;
     }
     .acc-package {
       font-family: var(--font-mono);
-      font-size: 12px;
+      font-size: 0.75rem;
       letter-spacing: 0.02em;
     }
     .acc-state {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 0.625rem;
     }
     .acc-state svg {
       color: var(--ink);
@@ -265,38 +268,38 @@ const id = `sdk-${sdk.package}`;
     .acc-title {
       position: absolute;
       top: 0;
-      right: 16px;
+      right: 1rem;
       display: flex;
       flex-direction: row-reverse;
       align-items: flex-start;
-      gap: 8px;
+      gap: 0.5rem;
     }
     .acc-title .jp {
       writing-mode: vertical-rl;
       font-size: var(--jp-size);
       letter-spacing: 0.02em;
-      padding-top: 18px;
+      padding-top: 1.125rem;
     }
     .acc-title .label {
-      font-size: 12px;
-      padding-top: 22px;
+      font-size: 0.75rem;
+      padding-top: 1.375rem;
     }
     .acc-body {
-      padding: 36px 20px 32px;
+      padding: 2.25rem 1.25rem 2rem;
       border-top: 1px solid var(--divider);
     }
     .acc-body .description {
-      margin-top: 16px;
-      font-size: 20px;
+      margin-top: 1rem;
+      font-size: 1.25rem;
     }
     .acc-body .facts {
-      margin-top: 14px;
+      margin-top: 0.875rem;
     }
     .acc-actions {
-      margin-top: 28px;
+      margin-top: 1.75rem;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 0.75rem;
     }
     .acc-docs {
       flex: 1 1 auto;
@@ -304,7 +307,7 @@ const id = `sdk-${sdk.package}`;
       display: inline-flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 16px;
+      padding: 0 1rem;
       border: 1px solid var(--ink);
       font-family: var(--font-mono);
       font-size: var(--meta-size-lg);
