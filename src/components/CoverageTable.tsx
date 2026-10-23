@@ -43,8 +43,13 @@ const formatSig = (sig: string) => {
   return sig.slice(0, open + 1) + '\n' + parts.map((p) => `    ${p},`).join('\n') + '\n' + sig.slice(close);
 };
 
-/** Длительность раскрытия из --expand-duration; при reduced motion — 0. */
-const expandMs = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--expand-duration')) || 0;
+/** Длительность раскрытия из --expand-duration в мс; при reduced motion — 0.
+ *  Минификатор CSS в сборке пишет 420ms как .42s — учитываем единицы. */
+const expandMs = () => {
+  const value = getComputedStyle(document.documentElement).getPropertyValue('--expand-duration').trim();
+  const n = parseFloat(value) || 0;
+  return value.endsWith('ms') ? n : value.endsWith('s') ? n * 1000 : n;
+};
 
 const panelId = (key: string) => 'op-' + key.replace(/[^a-z0-9]+/gi, '-');
 
