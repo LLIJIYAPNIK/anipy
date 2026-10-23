@@ -44,21 +44,21 @@ const { lang, caption, copyLabel, copy, code } = Astro.props;
 
 <style>
   figure {
-    margin: 24px 0 0;
+    margin: 1.5rem 0 0;
   }
   figcaption {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: 1rem;
   }
   .copy {
-    height: 36px;
-    margin-bottom: 8px;
+    height: 2.25rem;
+    margin-bottom: 0.5rem;
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    padding: 0 12px;
+    gap: 0.625rem;
+    padding: 0 0.75rem;
     background: transparent;
     border: 1px solid var(--divider);
     color: var(--secondary);
@@ -69,12 +69,12 @@ const { lang, caption, copyLabel, copy, code } = Astro.props;
   }
   figure :global(pre) {
     margin: 0;
-    padding: 20px 24px;
+    padding: 1.25rem 1.5rem;
     border: 1px solid var(--divider);
     background: var(--code-bg) !important;
     overflow-x: auto;
     font-family: 'JetBrains Mono', Consolas, ui-monospace, monospace;
-    font-size: 14px;
+    font-size: 0.875rem;
     line-height: 1.7;
     font-variant-ligatures: none;
     color: var(--ink);

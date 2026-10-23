@@ -6,7 +6,10 @@
   box-sizing: border-box;
 }
 
+/* Размеры заданы в rem от макета на 1440px. До 1440px 1rem = 16px, шире — растёт
+   вместе с окном (на 2000px — в 1.39 раза), на 2560px рост останавливается. */
 html {
+  font-size: clamp(16px, calc(100vw / 90), 28.4444px);
   background: var(--ground);
   color: var(--ink);
   font-family: var(--font-latin);
@@ -31,7 +34,7 @@ a {
 a:focus-visible,
 button:focus-visible {
   outline: 1px solid var(--ink);
-  outline-offset: 4px;
+  outline-offset: 0.25rem;
 }
 
 .meta {
