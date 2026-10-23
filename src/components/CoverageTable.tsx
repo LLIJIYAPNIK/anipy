@@ -255,27 +255,47 @@ export default function CoverageTable({ rows, groups, labels, detailsUrl, sdkPac
 
   // Сворачиваемая строка остаётся в DOM, пока играет анимация, — потом убирается.
   const [closing, setClosing] = useState<Set<string>>(new Set());
-  const closingRef = useRef(closing);
-  closingRef.current = closing;
+  // Свой таймер на каждую строку: повторное раскрытие его отменяет, новое закрытие —
+  // перезапускает. Иначе таймер первого закрытия оборвал бы анимацию второго.
+  const closeTimers = useRef(new Map<string, number>());
 
   const without = (set: Set<string>, keys: string[]) => new Set([...set].filter((k) => !keys.includes(k)));
+
+  const cancelClose = (key: string) => {
+    clearTimeout(closeTimers.current.get(key));
+    closeTimers.current.delete(key);
+  };
 
   const close = (keys: string[]) => {
     if (!keys.length) return;
     setClosing((prev) => new Set([...prev, ...keys]));
-    window.setTimeout(() => {
-      // Строку могли снова раскрыть, пока она сворачивалась.
-      const done = keys.filter((k) => closingRef.current.has(k));
-      setOpen((prev) => without(prev, done));
-      setClosing((prev) => without(prev, done));
-    }, expandMs());
+    const ms = expandMs();
+    for (const key of keys) {
+      cancelClose(key);
+      closeTimers.current.set(
+        key,
+        window.setTimeout(() => {
+          closeTimers.current.delete(key);
+          setOpen((prev) => without(prev, [key]));
+          setClosing((prev) => without(prev, [key]));
+        }, ms),
+      );
+    }
+  };
+
+  const reopen = (keys: string[]) => {
+    for (const key of keys) cancelClose(key);
+    setClosing((prev) => without(prev, keys));
   };
 
   const toggle = (key: string) => {
-    if (closing.has(key)) setClosing((prev) => without(prev, [key]));
+    if (closing.has(key)) reopen([key]);
     else if (open.has(key)) close([key]);
     else setOpen((prev) => new Set([...prev, key]));
   };
+
+  // Таймеры не переживают таблицу.
+  useEffect(() => () => closeTimers.current.forEach((id) => clearTimeout(id)), []);
 
   const chips = <T extends string>(label: string, value: T, set: (v: T) => void, options: [T, string][]) => (
     <div role="group" aria-label={label} class="cov-chips">
@@ -323,7 +343,7 @@ export default function CoverageTable({ rows, groups, labels, detailsUrl, sdkPac
         </span>
         <div class="cov-tools">
           <button type="button" class="cov-tool" onClick={() => {
-              setClosing(new Set());
+              reopen([...closing]);
               setOpen(new Set(visible.map((r) => r.key)));
             }}>
             {labels.expandAll}
