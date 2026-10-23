@@ -64,7 +64,9 @@ const id = `sdk-${sdk.package}`;
       <span class="visually-hidden">{sdk.label[lang]} — {sdk.platform}</span>
     </button>
   </h2>
-  <div class="acc-body" id={id} hidden>
+  <div class="acc-body" id={id} inert>
+    <div class="acc-inner">
+    <div class="acc-content">
     <div class="meta">{sdk.platform}</div>
     <p class="description">{sdk.description[lang]}</p>
     <div class="facts"><span>/docs/{sdk.package}/</span><span>{meta}</span></div>
@@ -73,6 +75,8 @@ const id = `sdk-${sdk.package}`;
       <a class="github" href={sdk.github} target="_blank" rel="noopener noreferrer" aria-label={githubLabel}>
         <GithubIcon size={18} />
       </a>
+    </div>
+    </div>
     </div>
   </div>
 </section>
@@ -219,7 +223,7 @@ const id = `sdk-${sdk.package}`;
       border-bottom: 1px solid var(--divider);
       transition: background-color 400ms;
     }
-    .accordion:has([aria-expanded='true']) {
+    .accordion.is-open {
       background-color: var(--panel-hover);
     }
     h2 {
@@ -290,7 +294,24 @@ const id = `sdk-${sdk.package}`;
       font-size: 0.75rem;
       padding-top: 1.375rem;
     }
+    /* Высота раскрывается плавно: grid-template-rows 0fr ↔ 1fr. */
     .acc-body {
+      display: grid;
+      grid-template-rows: 0fr;
+      opacity: 0;
+      transition:
+        grid-template-rows var(--expand-duration) var(--ease),
+        opacity var(--expand-duration) var(--ease);
+    }
+    .accordion.is-open .acc-body {
+      grid-template-rows: 1fr;
+      opacity: 1;
+    }
+    .acc-inner {
+      min-height: 0;
+      overflow: hidden;
+    }
+    .acc-content {
       padding: 2.25rem 1.25rem 2rem;
       border-top: 1px solid var(--divider);
     }

@@ -196,3 +196,45 @@ html.js [data-draw-circle] {
 .logo img {
   view-transition-name: site-logo;
 }
+
+/* ── Раскрытие и вкладки (#30) ───────────────────────────────────────────────
+   Высота анимируется через grid-template-rows: 0fr ↔ 1fr. */
+
+@keyframes expand {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+  to {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
+@keyframes collapse {
+  from {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+  to {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+
+/* Панель вкладки или отфильтрованный элемент появляются плавно. Свои keyframes —
+   чтобы анимация перезапускалась и у блоков, уже показанных через data-reveal. */
+@keyframes tab-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--rise-distance));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+html .tab-enter,
+html.js [data-reveal].is-revealed.tab-enter {
+  animation: tab-rise var(--rise-duration) var(--ease-out) both;
+}

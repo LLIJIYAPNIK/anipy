@@ -55,8 +55,10 @@ const ownerName = owner.split('/').pop();
     button.addEventListener('click', () => {
       const open = button.getAttribute('aria-expanded') !== 'true';
       button.setAttribute('aria-expanded', String(open));
+      // Высота раскрывается плавно (SdkPanel.astro); закрытое содержимое недоступно с клавиатуры.
+      button.closest('.accordion')?.classList.toggle('is-open', open);
       const body = document.getElementById(button.getAttribute('aria-controls') ?? '');
-      if (body) body.hidden = !open;
+      if (body) body.inert = !open;
     });
   }
 </script>
