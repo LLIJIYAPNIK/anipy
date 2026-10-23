@@ -80,6 +80,26 @@ export const parseClasses = (sources: string[]) => {
   return classes;
 };
 
+/** Длинная сигнатура — по аргументу на строку, как в макете. */
+export const formatSig = (sig: string) => {
+  const open = sig.indexOf('(');
+  const close = sig.lastIndexOf(')');
+  if (open < 0 || close < open || sig.length <= 72) return sig;
+  const parts: string[] = [];
+  let depth = 0;
+  let cur = '';
+  for (const ch of sig.slice(open + 1, close)) {
+    if ('([{'.includes(ch)) depth++;
+    if (')]}'.includes(ch)) depth--;
+    if (ch === ',' && depth === 0) {
+      parts.push(cur.trim());
+      cur = '';
+    } else cur += ch;
+  }
+  if (cur.trim()) parts.push(cur.trim());
+  return sig.slice(0, open + 1) + '\n' + parts.map((p) => `    ${p},`).join('\n') + '\n' + sig.slice(close);
+};
+
 const unquote = (s: string) => s.replace(/``/g, '').replace(/\*\*/g, '');
 
 /** Пункты раздела вида `name: описание` с продолжением на следующих строках. */
@@ -142,5 +162,5 @@ export const methodDoc = (classes: Record<string, PyClass>, root: string, call: 
   }
   const method = lookup(cls, (c) => c.methods[parts.at(-1)!]);
   if (!method) return undefined;
-  return { call, cls, sig: method.sig, ...parseDoc(method.doc) };
+  return { call, cls, sig: formatSig(method.sig), ...parseDoc(method.doc) };
 };

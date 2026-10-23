@@ -7,6 +7,7 @@ import { groupForTag, type GroupKey } from '../data/coverage-groups';
 import { parseEndpoints, type Status } from './endpoints';
 import { operationDetail, type OperationDetail } from './openapi';
 import { methodDoc, parseClasses, type MethodDoc } from './pydoc';
+import { highlight } from './highlight';
 
 export type CoverageRow = {
   key: string;
@@ -18,7 +19,12 @@ export type CoverageRow = {
   status: Status;
 };
 
-export type CoverageDetail = { api?: OperationDetail; sdk: MethodDoc[] };
+/** html — тот же код с подсветкой (lib/highlight.ts); текст остаётся для копирования. */
+export type CoverageDetail = {
+  api?: OperationDetail;
+  sdk: MethodDoc[];
+  html: { example?: string; bodyExample?: string; sdk: { sig: string; example?: string }[] };
+};
 
 const pyFiles = (dir: string): string[] =>
   readdirSync(dir).flatMap((name) => {
@@ -62,7 +68,7 @@ export const loadCoverage = (sdk: Sdk) => {
 };
 
 /** Подробности всех операций — отдельным JSON, его грузит таблица при первом раскрытии. */
-export const loadCoverageDetails = (sdk: Sdk): Record<string, CoverageDetail> => {
+export const loadCoverageDetails = async (sdk: Sdk): Promise<Record<string, CoverageDetail>> => {
   const coverage = loadCoverage(sdk);
   if (!coverage || !sdk.coverage) return {};
   const base = sdkDir(sdk);
@@ -72,13 +78,27 @@ export const loadCoverageDetails = (sdk: Sdk): Record<string, CoverageDetail> =>
   // Корень — класс клиента: у него больше всего атрибутов-ресурсов.
   const root = Object.entries(classes).sort((a, b) => Object.keys(b[1].attrs).length - Object.keys(a[1].attrs).length)[0]?.[0] ?? '';
 
+  const maybe = (code: string | undefined, lang: 'json' | 'python') => (code ? highlight(code, lang) : undefined);
   return Object.fromEntries(
-    coverage.rows.map((row) => [
-      row.key,
-      {
-        api: spec ? operationDetail(spec, row.method, row.path) : undefined,
-        sdk: row.calls.map((call) => methodDoc(classes, root, call)).filter((d): d is MethodDoc => !!d),
-      },
-    ]),
+    await Promise.all(
+      coverage.rows.map(async (row): Promise<[string, CoverageDetail]> => {
+        const api = spec ? operationDetail(spec, row.method, row.path) : undefined;
+        const docs = row.calls.map((call) => methodDoc(classes, root, call)).filter((d): d is MethodDoc => !!d);
+        return [
+          row.key,
+          {
+            api,
+            sdk: docs,
+            html: {
+              example: await maybe(api?.example, 'json'),
+              bodyExample: await maybe(api?.body?.example, 'json'),
+              sdk: await Promise.all(
+                docs.map(async (m) => ({ sig: await highlight(m.sig, 'python'), example: await maybe(m.example, 'python') })),
+              ),
+            },
+          },
+        ];
+      }),
+    ),
   );
 };

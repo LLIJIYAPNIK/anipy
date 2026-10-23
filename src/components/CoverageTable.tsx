@@ -23,26 +23,6 @@ type Props = {
 type StatusFilter = 'all' | 'ok' | 'not';
 type AuthFilter = 'all' | 'public' | 'account';
 
-/** Длинная сигнатура — по аргументу на строку, как в макете. */
-const formatSig = (sig: string) => {
-  const open = sig.indexOf('(');
-  const close = sig.lastIndexOf(')');
-  if (open < 0 || close < open || sig.length <= 72) return sig;
-  const parts: string[] = [];
-  let depth = 0;
-  let cur = '';
-  for (const ch of sig.slice(open + 1, close)) {
-    if ('([{'.includes(ch)) depth++;
-    if (')]}'.includes(ch)) depth--;
-    if (ch === ',' && depth === 0) {
-      parts.push(cur.trim());
-      cur = '';
-    } else cur += ch;
-  }
-  if (cur.trim()) parts.push(cur.trim());
-  return sig.slice(0, open + 1) + '\n' + parts.map((p) => `    ${p},`).join('\n') + '\n' + sig.slice(close);
-};
-
 /** Длительность раскрытия из --expand-duration в мс; при reduced motion — 0.
  *  Минификатор CSS в сборке пишет 420ms как .42s — учитываем единицы. */
 const expandMs = () => {
@@ -50,6 +30,10 @@ const expandMs = () => {
   const n = parseFloat(value) || 0;
   return value.endsWith('ms') ? n : value.endsWith('s') ? n * 1000 : n;
 };
+
+/** Код с подсветкой из сборки (lib/highlight.ts), без неё — как текст. */
+const Code = ({ html, text, class: cls }: { html?: string; text: string; class: string }) =>
+  html ? <pre class={cls} dangerouslySetInnerHTML={{ __html: html }} /> : <pre class={cls}>{text}</pre>;
 
 const panelId = (key: string) => 'op-' + key.replace(/[^a-z0-9]+/gi, '-');
 
@@ -135,7 +119,7 @@ function Detail({ row, detail, labels, sdkPackage }: { row: CoverageRow; detail:
                   </div>
                 ))}
               </div>
-              {api.body.example && <pre class="cov-pre cov-pre-sm">{api.body.example}</pre>}
+              {api.body.example && <Code class="cov-pre cov-pre-sm" html={detail.html?.bodyExample} text={api.body.example} />}
             </div>
           )}
 
@@ -160,7 +144,7 @@ function Detail({ row, detail, labels, sdkPackage }: { row: CoverageRow; detail:
                 </span>
                 <CopyButton text={api.example} labels={labels} />
               </figcaption>
-              <pre class="cov-pre cov-pre-scroll">{api.example}</pre>
+              <Code class="cov-pre cov-pre-scroll" html={detail.html?.example} text={api.example} />
             </figure>
           )}
         </div>
@@ -171,8 +155,9 @@ function Detail({ row, detail, labels, sdkPackage }: { row: CoverageRow; detail:
           SDK · {sdkPackage} {labels.sdkLang && <span class="cov-dim">{labels.sdkLang}</span>}
         </span>
         {note && <p class="cov-sdk-note">{note}</p>}
-        {detail.sdk.map((m) => {
-          const sig = formatSig(m.sig);
+        {detail.sdk.map((m, n) => {
+          const sig = m.sig;
+          const html = detail.html?.sdk[n];
           return (
             <div lang="en" class="cov-method">
               <h4 class="cov-method-call">{m.call}</h4>
@@ -184,7 +169,7 @@ function Detail({ row, detail, labels, sdkPackage }: { row: CoverageRow; detail:
                   </span>
                   <CopyButton text={sig} labels={labels} />
                 </figcaption>
-                <pre class="cov-pre cov-pre-wrap">{sig}</pre>
+                <Code class="cov-pre cov-pre-wrap" html={html?.sig} text={sig} />
               </figure>
               {m.args.length > 0 && (
                 <div>
@@ -220,7 +205,7 @@ function Detail({ row, detail, labels, sdkPackage }: { row: CoverageRow; detail:
                     <span class="cov-h5">{labels.example}</span>
                     <CopyButton text={m.example} labels={labels} />
                   </figcaption>
-                  <pre class="cov-pre">{m.example}</pre>
+                  <Code class="cov-pre" html={html?.example} text={m.example} />
                 </figure>
               )}
             </div>

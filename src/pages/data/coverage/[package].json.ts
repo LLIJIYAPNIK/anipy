@@ -6,7 +6,7 @@ import { loadCoverageDetails } from '../../../lib/coverage';
 export const getStaticPaths = () =>
   sdks.filter((sdk) => sdk.coverage).map((sdk) => ({ params: { package: sdk.package }, props: { sdk } }));
 
-export const GET: APIRoute = ({ props }) =>
-  new Response(JSON.stringify(loadCoverageDetails(props.sdk)), {
+export const GET: APIRoute = async ({ props }) =>
+  new Response(JSON.stringify(await loadCoverageDetails(props.sdk)), {
     headers: { 'content-type': 'application/json; charset=utf-8' },
   });
