@@ -64,7 +64,7 @@ html :is(.side-nav a, .toc a):hover {
 
 /* Логотип: энсо поворачивается, как кисть перед мазком. */
 html .logo img {
-  transition: transform 900ms var(--ease-out);
+  transition: transform var(--logo-duration) var(--ease-out);
 }
 html .logo:is(:hover, :focus-visible) img {
   transform: rotate(-14deg) scale(1.04);

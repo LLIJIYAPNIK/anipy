@@ -209,7 +209,7 @@ button.cov-row {
   padding-top: 0.25rem;
 }
 .cov-plus svg {
-  transition: transform 420ms var(--ease-out);
+  transition: transform var(--expand-duration) var(--ease-out);
 }
 [aria-expanded='true'] .cov-plus svg {
   transform: rotate(45deg);

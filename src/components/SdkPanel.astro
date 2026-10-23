@@ -221,7 +221,7 @@ const id = `sdk-${sdk.package}`;
     .accordion {
       display: block;
       border-bottom: 1px solid var(--divider);
-      transition: background-color 400ms;
+      transition: background-color var(--expand-duration);
     }
     .accordion.is-open {
       background-color: var(--panel-hover);
@@ -263,7 +263,7 @@ const id = `sdk-${sdk.package}`;
     }
     .acc-state svg {
       color: var(--ink);
-      transition: transform 400ms var(--ease);
+      transition: transform var(--expand-duration) var(--ease);
     }
     [aria-expanded='true'] .acc-state svg {
       transform: rotate(45deg);

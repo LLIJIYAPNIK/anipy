@@ -43,6 +43,8 @@
   /* Движение (motion.css): отклик на наведение, появление блоков, «письмо» каны,
      раскрытие строк, смена страниц. Подъём при появлении — как .anp-rise в макете. */
   --hover-duration: 280ms;
+  /* Наклон логотипа — медленнее остального отклика, как движение кисти. */
+  --logo-duration: 900ms;
   --rise-duration: 720ms;
   --rise-distance: 0.625rem;
   --stagger: 90ms;
@@ -69,6 +71,7 @@
     --reveal-out: 0ms;
     --toc-duration: 0ms;
     --hover-duration: 0ms;
+    --logo-duration: 0ms;
     --rise-duration: 0ms;
     --rise-distance: 0;
     --stagger: 0ms;
