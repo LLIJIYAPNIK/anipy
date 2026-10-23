@@ -1,7 +1,7 @@
 ---
 import Base from '../../../layouts/Base.astro';
 import SiteHeader from '../../../components/SiteHeader.astro';
-import GithubIcon from '../../../components/GithubIcon.astro';
+import GithubButton from '../../../components/GithubButton.astro';
 import { owner, sdks } from '../../../data/sdks';
 import { langs, t, type Key, type Lang } from '../../../i18n';
 
@@ -22,17 +22,25 @@ const chapters: { number: string; title: Key; paragraphs: Key[] }[] = [
   <main>
     <section class="hero">
       <div class="hero-logo">
-        <img data-draw-circle src="/logo-full.png" alt={t(lang, 'about.logoAlt')} width="600" height="600" />
+        <!-- Знак и надпись раздельно: сначала дорисовывается круг, потом проявляется надпись. -->
+        <figure class="brand-mark" role="img" aria-label={t(lang, 'about.logoAlt')}>
+          <img data-draw-circle src="/logo.png" alt="" width="410" height="410" />
+          <figcaption class="wordmark" aria-hidden="true" data-rise style="--after: var(--draw-duration)">
+            <span class="wm-name">anipy</span>
+            <span class="wm-tag">ANIME × PYTHON</span>
+          </figcaption>
+        </figure>
       </div>
       <div class="hero-text">
-        <div class="hero-copy" data-rise style="--i: 2">
+        <div class="hero-copy" data-rise style="--after: calc(var(--draw-duration) + var(--stagger) * 3)">
           <div class="meta eyebrow">{t(lang, 'about.eyebrow')}</div>
           <h1>{t(lang, 'about.title')}</h1>
           <p class="lead">{t(lang, 'about.lead')}</p>
           <div class="meta hero-meta">{t(lang, 'site.footer')}</div>
         </div>
         <span class="vertical" aria-hidden="true" data-parallax>
-          <span class="jp" lang="ja" data-draw style="--i: 2">概要</span>
+          <!-- Иероглифы — последними, после круга, надписи и текста. -->
+          <span class="jp" lang="ja" data-draw style="--after: calc(var(--draw-duration) + var(--rise-duration) + var(--stagger) * 4)">概要</span>
           <span class="vertical-label">{t(lang, 'nav.about')}</span>
         </span>
       </div>
@@ -89,9 +97,7 @@ const chapters: { number: string; title: Key; paragraphs: Key[] }[] = [
               <a class="c-docs" href={`/${lang}/docs/${sdk.package}/`}>
                 {t(lang, 'nav.docs').toUpperCase()} ↗
               </a>
-              <a class="c-github" href={sdk.github} target="_blank" rel="noopener noreferrer" aria-label={`${sdk.package} ${t(lang, 'nav.onGithub')}`}>
-                <GithubIcon />
-              </a>
+              <GithubButton href={sdk.github} label={`${sdk.package} ${t(lang, 'nav.onGithub')}`} />
             </li>
           ))
         }
@@ -133,11 +139,36 @@ const chapters: { number: string; title: Key; paragraphs: Key[] }[] = [
     padding: 3rem 1.5rem;
     border-right: 1px solid var(--divider);
   }
-  .hero-logo img {
+  /* Пропорции — как в логотипе макета: надпись в 1.6 раза шире круга. */
+  .brand-mark {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .brand-mark img {
     display: block;
-    width: 100%;
-    max-width: 37.5rem;
-    height: auto;
+    width: 15rem;
+    height: 15rem;
+  }
+  .wordmark {
+    margin-top: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.75rem;
+  }
+  .wm-name {
+    font-size: 5.25rem;
+    line-height: 1;
+    letter-spacing: 0.42em;
+    /* Разрядка добавляет пробел после последней буквы — компенсируем, чтобы слово стояло по центру. */
+    margin-right: -0.42em;
+  }
+  .wm-tag {
+    font-size: 1.0625rem;
+    letter-spacing: 0.5em;
+    margin-right: -0.5em;
   }
   .hero-text {
     flex: 1 1 30rem;
@@ -300,15 +331,6 @@ const chapters: { number: string; title: Key; paragraphs: Key[] }[] = [
     letter-spacing: var(--meta-tracking);
     padding: 0.875rem 0;
   }
-  .c-github {
-    width: 2.75rem;
-    height: 2.75rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--rule);
-    border-radius: 50%;
-  }
 
   .foot {
     padding: 2.5rem var(--page-gutter) 3.5rem;
@@ -327,6 +349,16 @@ const chapters: { number: string; title: Key; paragraphs: Key[] }[] = [
     .hero-logo {
       border-right: 0;
       border-bottom: 1px solid var(--divider);
+    }
+    .brand-mark img {
+      width: 10rem;
+      height: 10rem;
+    }
+    .wm-name {
+      font-size: 3.5rem;
+    }
+    .wm-tag {
+      font-size: 0.8125rem;
     }
     .hero-text {
       padding: 3rem var(--page-gutter);

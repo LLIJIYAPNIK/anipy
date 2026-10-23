@@ -11,6 +11,17 @@
    вместе с окном (на 2000px — в 1.39 раза), на 2560px рост останавливается. */
 html {
   font-size: clamp(16px, calc(100vw / 90), 28.4444px);
+}
+
+/* Страницы в один экран (главная): масштаб по меньшему из ширины к 1440 и высоты к 900 —
+   раскладка сохраняет пропорции макета и не выходит за окно. Ниже 1101px — обычный поток. */
+@media (min-width: 1101px) {
+  html.fit-screen {
+    font-size: clamp(13px, min(100vw / 90, 100vh / 56.25), 28.4444px);
+  }
+}
+
+html {
   background: var(--ground);
   color: var(--ink);
   font-family: var(--font-latin);

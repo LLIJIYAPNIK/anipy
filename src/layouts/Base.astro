@@ -6,13 +6,15 @@ interface Props {
   lang: Lang;
   title: string;
   description?: string;
+  /** Страница в один экран: масштаб и по высоте окна (global.css, html.fit-screen). */
+  fit?: boolean;
 }
 
-const { lang, title, description } = Astro.props;
+const { lang, title, description, fit = false } = Astro.props;
 ---
 
 <!doctype html>
-<html lang={lang}>
+<html lang={lang} class:list={{ 'fit-screen': fit }}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

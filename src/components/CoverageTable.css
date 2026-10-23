@@ -514,3 +514,23 @@ button.cov-row {
     flex-basis: 100%;
   }
 }
+
+/* Подсветка кода (lib/highlight.ts) — только оттенки из tokens.css: роль токена — яркость и курсив. */
+.cov-pre .hl-ink {
+  color: var(--ink);
+}
+.cov-pre .hl-soft {
+  color: var(--body-soft);
+}
+.cov-pre .hl-ter {
+  color: var(--tertiary);
+}
+.cov-pre .hl-sec {
+  color: var(--secondary);
+}
+.cov-pre .hl-mut {
+  color: var(--muted);
+}
+.cov-pre .hl-i {
+  font-style: italic;
+}

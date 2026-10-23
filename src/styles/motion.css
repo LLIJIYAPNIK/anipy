@@ -5,27 +5,32 @@
 /* ── Наведение (#25) ─────────────────────────────────────────────────────────
    Префикс html — чтобы перебить scoped-стили компонентов той же специфичности. */
 
-/* Круглые кнопки GitHub: заливка белым, иконка чёрная и чуть поворачивается. */
-html :is(.github, .c-github) {
+/* Кнопка GitHub (components/GithubButton.astro) — одна на весь сайт:
+   заливка белым, иконка чёрная и чуть поворачивается. */
+html .gh-btn {
   transition:
     background-color var(--hover-duration) var(--ease-out),
     border-color var(--hover-duration) var(--ease-out),
     color var(--hover-duration) var(--ease-out);
 }
-html :is(.github, .c-github) svg,
-html .foot-github svg {
+html .gh-btn svg {
   transition: transform var(--hover-duration) var(--ease-out);
 }
-html :is(.github, .c-github):is(:hover, :focus-visible) {
+html .gh-btn:is(:hover, :focus-visible) {
   background-color: var(--ink);
   border-color: var(--ink);
   color: var(--ground);
 }
-html :is(.github, .c-github, .foot-github):is(:hover, :focus-visible) svg {
+html .gh-btn:is(:hover, :focus-visible) svg {
   transform: rotate(-12deg) scale(1.08);
 }
 
-/* Кнопки с рамкой: инверсия. */
+/* Кнопки с рамкой: инверсия целиком — фон, текст и иконка.
+   Цвет состояний (кнопка «скопировано») — до правила наведения, чтобы инверсия его перекрывала.
+   Своих :hover с цветом у этих кнопок в компонентах быть не должно: перебьют инверсию. */
+html :is(.run, .copy).is-done {
+  color: var(--ink);
+}
 html :is(.go, .copy, .cov-copy, .cov-tool, .cov-chip, .run, .acc-docs) {
   transition:
     background-color var(--hover-duration) var(--ease-out),
@@ -38,14 +43,14 @@ html :is(.go, .copy, .cov-copy, .cov-tool, .cov-chip, .run, .acc-docs):is(:hover
   color: var(--ground);
 }
 
-/* Текстовые ссылки: подчёркивание вырастает слева направо. */
-html :is(.facts a, .crumbs a, a.source, .log-foot a, .c-docs, .foot a, .site-nav a, .lib a) {
+/* Текстовые ссылки и неактивный язык: подчёркивание вырастает слева направо. */
+html :is(.facts a, .crumbs a, a.source, .log-foot a, .c-docs, .foot a:not(.gh-btn), .site-nav a, .lib a, .lang a, .lang-switch [aria-pressed='false']) {
   background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
   transition:
     background-size var(--hover-duration) var(--ease-out),
     color var(--hover-duration) var(--ease-out);
 }
-html :is(.facts a, .crumbs a, a.source, .log-foot a, .c-docs, .foot a, .site-nav a, .lib a):is(:hover, :focus-visible) {
+html :is(.facts a, .crumbs a, a.source, .log-foot a, .c-docs, .foot a:not(.gh-btn), .site-nav a, .lib a, .lang a, .lang-switch [aria-pressed='false']):is(:hover, :focus-visible) {
   background-size: 100% 1px;
   color: var(--ink);
 }
@@ -91,7 +96,10 @@ html .coverage-card:hover .coverage-arrow {
 
 /* ── Появление (#26) ─────────────────────────────────────────────────────────
    data-rise — при загрузке, по очереди (--i); data-reveal — когда блок доезжает
-   до экрана (scripts/motion.ts ставит .is-revealed). */
+   до экрана (scripts/motion.ts ставит .is-revealed).
+   Очерёдность (#45): крупная анимация (кана, энсо) идёт одна, остальное — до или после неё.
+   --after — «после чего» начинать; только через токены длительностей, чтобы при
+   reduced motion задержка тоже обнулялась. */
 
 @keyframes rise {
   from {
@@ -106,7 +114,7 @@ html .coverage-card:hover .coverage-arrow {
 
 html.js [data-rise] {
   animation: rise var(--rise-duration) var(--ease-out) both;
-  animation-delay: calc(var(--i, 0) * var(--stagger));
+  animation-delay: calc(var(--after, 0ms) + var(--i, 0) * var(--stagger));
 }
 
 html.js [data-reveal]:not(.is-revealed) {
@@ -114,7 +122,7 @@ html.js [data-reveal]:not(.is-revealed) {
 }
 html.js [data-reveal].is-revealed {
   animation: rise var(--rise-duration) var(--ease-out) both;
-  animation-delay: calc(var(--i, 0) * var(--stagger));
+  animation-delay: calc(var(--after, 0ms) + var(--i, 0) * var(--stagger));
 }
 
 /* ── «Письмо» каны и энсо (#27) ─────────────────────────────────────────────
@@ -132,7 +140,14 @@ html.js [data-reveal].is-revealed {
 /* --d — своя очередь «письма»; без неё — общая --i. */
 html.js [data-draw] {
   animation: draw-down var(--draw-duration) var(--ease) both;
-  animation-delay: calc(var(--d, var(--i, 0)) * var(--stagger) * 2);
+  animation-delay: calc(var(--after, 0ms) + var(--d, 0) * var(--stagger) * 2);
+}
+
+/* Очерёдность (#45): вертикальная кана в заголовках страниц «пишется» после того, как
+   появились заголовок и текст (data-rise с --i 0–3). На главной и «О проекте» —
+   свои последовательности в SdkPanel.astro и about/index.astro. */
+:is(.vertical, .mark-title, .panel-title) [data-draw] {
+  --after: calc(var(--rise-duration) + var(--stagger) * 3);
 }
 
 /* Энсо дорисовывается по кругу. Без @property угол сразу 360deg — круг виден целиком. */
@@ -153,7 +168,7 @@ html.js [data-draw] {
 
 html.js [data-draw-circle] {
   mask-image: conic-gradient(from -90deg, #000 var(--sweep), transparent var(--sweep));
-  animation: sweep calc(var(--draw-duration) * 1.4) var(--ease) both;
+  animation: sweep var(--draw-duration) var(--ease) both;
 }
 
 /* ── Параллакс (#28) — scripts/motion.ts задаёт --parallax-y. ─────────────── */

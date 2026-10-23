@@ -76,7 +76,7 @@ const actions = (lang: Lang): Action[] =>
 
     <div class="panel" aria-hidden="true">
       <div class="panel-title">
-        <span class="jp" lang="ja" data-draw style="--i: 2">{kana}</span>
+        <span class="jp" lang="ja" data-draw>{kana}</span>
         {
           langs.map((lang) => (
             <span class="panel-label" data-lang={lang} hidden={lang !== 'ru'}>
