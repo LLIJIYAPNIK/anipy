@@ -13,7 +13,7 @@ const lang = Astro.params.lang as Lang;
 const ownerName = owner.split('/').pop();
 ---
 
-<Base lang={lang} title="ANIPY" description={t(lang, 'site.tagline')}>
+<Base lang={lang} title="ANIPY" description={t(lang, 'site.tagline')} fit>
   <div class="home">
     <header class="brand">
       <Logo lang={lang} />
@@ -80,6 +80,9 @@ const ownerName = owner.split('/').pop();
   }
   .tagline-meta {
     letter-spacing: 0.22em;
+    /* На одной базовой линии со словом «anipy»: моноширинный шрифт ниже по x-высоте. */
+    position: relative;
+    top: 0.25rem;
   }
   .tools {
     position: absolute;
