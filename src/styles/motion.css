@@ -88,3 +88,77 @@ html .others a:hover .other-mark {
 html .coverage-card:hover .coverage-arrow {
   transform: translateX(0.375rem);
 }
+
+/* ── Появление (#26) ─────────────────────────────────────────────────────────
+   data-rise — при загрузке, по очереди (--i); data-reveal — когда блок доезжает
+   до экрана (scripts/motion.ts ставит .is-revealed). */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--rise-distance));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+html.js [data-rise] {
+  animation: rise var(--rise-duration) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * var(--stagger));
+}
+
+html.js [data-reveal]:not(.is-revealed) {
+  opacity: 0;
+}
+html.js [data-reveal].is-revealed {
+  animation: rise var(--rise-duration) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * var(--stagger));
+}
+
+/* ── «Письмо» каны и энсо (#27) ─────────────────────────────────────────────
+   Вертикальная кана проявляется сверху вниз, как при письме кистью. */
+
+@keyframes draw-down {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* --d — своя очередь «письма»; без неё — общая --i. */
+html.js [data-draw] {
+  animation: draw-down var(--draw-duration) var(--ease) both;
+  animation-delay: calc(var(--d, var(--i, 0)) * var(--stagger) * 2);
+}
+
+/* Энсо дорисовывается по кругу. Без @property угол сразу 360deg — круг виден целиком. */
+@property --sweep {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 360deg;
+}
+
+@keyframes sweep {
+  from {
+    --sweep: 0deg;
+  }
+  to {
+    --sweep: 360deg;
+  }
+}
+
+html.js [data-draw-circle] {
+  mask-image: conic-gradient(from -90deg, #000 var(--sweep), transparent var(--sweep));
+  animation: sweep calc(var(--draw-duration) * 1.4) var(--ease) both;
+}
+
+/* ── Параллакс (#28) — scripts/motion.ts задаёт --parallax-y. ─────────────── */
+
+[data-parallax] {
+  transform: translateY(var(--parallax-y, 0));
+  will-change: transform;
+}

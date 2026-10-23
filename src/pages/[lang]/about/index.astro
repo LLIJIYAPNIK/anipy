@@ -22,17 +22,17 @@ const chapters: { number: string; title: Key; paragraphs: Key[] }[] = [
   <main>
     <section class="hero">
       <div class="hero-logo">
-        <img src="/logo-full.png" alt={t(lang, 'about.logoAlt')} width="600" height="600" />
+        <img data-draw-circle src="/logo-full.png" alt={t(lang, 'about.logoAlt')} width="600" height="600" />
       </div>
       <div class="hero-text">
-        <div class="hero-copy">
+        <div class="hero-copy" data-rise style="--i: 2">
           <div class="meta eyebrow">{t(lang, 'about.eyebrow')}</div>
           <h1>{t(lang, 'about.title')}</h1>
           <p class="lead">{t(lang, 'about.lead')}</p>
           <div class="meta hero-meta">{t(lang, 'site.footer')}</div>
         </div>
-        <span class="vertical" aria-hidden="true">
-          <span class="jp" lang="ja">概要</span>
+        <span class="vertical" aria-hidden="true" data-parallax>
+          <span class="jp" lang="ja" data-draw style="--i: 2">概要</span>
           <span class="vertical-label">{t(lang, 'nav.about')}</span>
         </span>
       </div>
@@ -40,7 +40,7 @@ const chapters: { number: string; title: Key; paragraphs: Key[] }[] = [
 
     {
       chapters.map((c) => (
-        <section class="chapter">
+        <section class="chapter" data-reveal>
           <div class="chapter-head">
             <div class="chapter-num">{c.number}</div>
             <h2>{t(lang, c.title)}</h2>
@@ -54,7 +54,7 @@ const chapters: { number: string; title: Key; paragraphs: Key[] }[] = [
       ))
     }
 
-    <section class="chapter">
+    <section class="chapter" data-reveal>
       <div class="chapter-head">
         <div class="chapter-num">III</div>
         <h2>{t(lang, 'about.markTitle')}</h2>
@@ -76,8 +76,8 @@ const chapters: { number: string; title: Key; paragraphs: Key[] }[] = [
       <div class="meta eyebrow">{t(lang, 'about.collection')}</div>
       <ul>
         {
-          sdks.map((sdk) => (
-            <li>
+          sdks.map((sdk, i) => (
+            <li data-reveal style={`--i: ${i}`}>
               <span class="c-num">{sdk.number}</span>
               <span class="c-kana jp" lang="ja">
                 {sdk.kana}

@@ -6,9 +6,15 @@ import { t, type Lang } from '../i18n';
 interface Props {
   sdk: Sdk;
   lang: Lang;
+  /** Порядок панели: задержка появления и «письма» каны. */
+  index?: number;
 }
 
-const { sdk, lang } = Astro.props;
+const { sdk, lang, index = 0 } = Astro.props;
+// Панели появляются после вводного блока (data-rise --i 1–5 на главной).
+const order = `--i: ${index + 6}`;
+// Кана начинает «писаться» вместе с появлением своей панели.
+const drawOrder = `--d: ${index + 3}`;
 const route = `/${lang}/docs/${sdk.package}/`;
 const meta = `${sdk.license} · PYTHON ${sdk.python}`;
 const githubLabel = `${sdk.package} ${t(lang, 'nav.onGithub')}`;
@@ -16,11 +22,11 @@ const id = `sdk-${sdk.package}`;
 ---
 
 <!-- Десктоп: панель целиком — ссылка на документацию, GitHub — соседняя ссылка. -->
-<div class="panel">
+<div class="panel" data-rise style={order}>
   <a class="panel-link" href={route} aria-label={`${sdk.kana} — ${sdk.label[lang]}: ${sdk.package}, ${t(lang, 'nav.docs').toLowerCase()}`}></a>
 
   <div class="title" aria-hidden="true">
-    <span class="jp kana" lang="ja">{sdk.kana}</span>
+    <span class="jp kana" lang="ja" data-draw style={drawOrder}>{sdk.kana}</span>
     <span class="label">{sdk.label[lang]}</span>
   </div>
 
@@ -40,7 +46,7 @@ const id = `sdk-${sdk.package}`;
 </div>
 
 <!-- Мобильный: аккордеон. -->
-<section class="accordion">
+<section class="accordion" data-rise style={order}>
   <h2>
     <button type="button" aria-expanded="false" aria-controls={id}>
       <span class="acc-head">
