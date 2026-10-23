@@ -4,6 +4,7 @@
   --error-panel: #050505;
   --row-open: #080808;
   --code-bg: #0a0a0a;
+  --row-hover: #0b0b0b;
   --panel-hover: #111111;
   --rule-faint: #1a1a1a;
   --divider: #292929;
@@ -38,6 +39,18 @@
   --reveal-delay: 180ms;
   --reveal-out: 160ms;
   --toc-duration: 360ms;
+
+  /* Движение (motion.css): отклик на наведение, появление блоков, «письмо» каны,
+     раскрытие строк, смена страниц. Подъём при появлении — как .anp-rise в макете. */
+  --hover-duration: 280ms;
+  --rise-duration: 720ms;
+  --rise-distance: 0.625rem;
+  --stagger: 90ms;
+  --draw-duration: 1400ms;
+  --expand-duration: 420ms;
+  --page-duration: 380ms;
+  /* Доля прокрутки, на которую вертикальная кана отстаёт от текста. */
+  --parallax: 0.18;
 }
 
 @media (max-width: 767px) {
@@ -55,5 +68,13 @@
     --reveal-delay: 0ms;
     --reveal-out: 0ms;
     --toc-duration: 0ms;
+    --hover-duration: 0ms;
+    --rise-duration: 0ms;
+    --rise-distance: 0;
+    --stagger: 0ms;
+    --draw-duration: 0ms;
+    --expand-duration: 0ms;
+    --page-duration: 0ms;
+    --parallax: 0;
   }
 }
