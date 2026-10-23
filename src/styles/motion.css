@@ -25,7 +25,12 @@ html :is(.github, .c-github, .foot-github):is(:hover, :focus-visible) svg {
   transform: rotate(-12deg) scale(1.08);
 }
 
-/* Кнопки с рамкой: инверсия. */
+/* Кнопки с рамкой: инверсия целиком — фон, текст и иконка.
+   Цвет состояний (кнопка «скопировано») — до правила наведения, чтобы инверсия его перекрывала.
+   Своих :hover с цветом у этих кнопок в компонентах быть не должно: перебьют инверсию. */
+html :is(.run, .copy).is-done {
+  color: var(--ink);
+}
 html :is(.go, .copy, .cov-copy, .cov-tool, .cov-chip, .run, .acc-docs) {
   transition:
     background-color var(--hover-duration) var(--ease-out),
@@ -38,14 +43,14 @@ html :is(.go, .copy, .cov-copy, .cov-tool, .cov-chip, .run, .acc-docs):is(:hover
   color: var(--ground);
 }
 
-/* Текстовые ссылки: подчёркивание вырастает слева направо. */
-html :is(.facts a, .crumbs a, a.source, .log-foot a, .c-docs, .foot a, .site-nav a, .lib a) {
+/* Текстовые ссылки и неактивный язык: подчёркивание вырастает слева направо. */
+html :is(.facts a, .crumbs a, a.source, .log-foot a, .c-docs, .foot a, .site-nav a, .lib a, .lang a, .lang-switch [aria-pressed='false']) {
   background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
   transition:
     background-size var(--hover-duration) var(--ease-out),
     color var(--hover-duration) var(--ease-out);
 }
-html :is(.facts a, .crumbs a, a.source, .log-foot a, .c-docs, .foot a, .site-nav a, .lib a):is(:hover, :focus-visible) {
+html :is(.facts a, .crumbs a, a.source, .log-foot a, .c-docs, .foot a, .site-nav a, .lib a, .lang a, .lang-switch [aria-pressed='false']):is(:hover, :focus-visible) {
   background-size: 100% 1px;
   color: var(--ink);
 }
