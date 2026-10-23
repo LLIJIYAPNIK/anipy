@@ -21,6 +21,18 @@ body {
   margin: 0;
 }
 
+/* Плавная прокрутка к якорям; при reduced motion — сразу. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Заголовок после перехода по якорю не прижат к краю окна. */
+[id] {
+  scroll-margin-top: 2.5rem;
+}
+
 ::selection {
   background: var(--ink);
   color: var(--ground);
