@@ -187,13 +187,43 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
   const setCurrent = (id: string) => {
     for (const a of links) a.setAttribute('aria-current', a.dataset.toc === id ? 'location' : 'false');
   };
+
+  // Пока идёт прокрутка после клика, подсветка остаётся на выбранном пункте:
+  // короткие нижние разделы не доезжают до верха, и иначе она «перескакивала» бы.
+  let locked = false;
+  let unlockTimer = 0;
+  const unlock = () => {
+    locked = false;
+    clearTimeout(unlockTimer);
+  };
+  window.addEventListener('scrollend', unlock);
+  // Ручная прокрутка колесом, тачем или клавишами отменяет блокировку сразу.
+  for (const type of ['wheel', 'touchstart', 'keydown']) window.addEventListener(type, unlock, { passive: true });
+
+  for (const a of links) {
+    a.addEventListener('click', (event) => {
+      const target = document.getElementById(a.dataset.toc!);
+      if (!target) return;
+      event.preventDefault();
+      setCurrent(a.dataset.toc!);
+      locked = true;
+      // Запасной выход для браузеров без scrollend и для случая, когда прокручивать некуда.
+      clearTimeout(unlockTimer);
+      unlockTimer = window.setTimeout(unlock, 1200);
+      target.scrollIntoView({ block: 'start' });
+      history.replaceState(null, '', `#${a.dataset.toc}`);
+    });
+  }
+
+  // Текущий раздел — последний, чей заголовок прошёл верхнюю треть окна.
+  // В самом низу страницы, куда пользователь докрутил сам, — последний раздел.
   const update = () => {
+    if (locked) return;
     let current = ids[0];
     for (const id of ids) {
       const el = document.getElementById(id);
-      if (el && el.getBoundingClientRect().top < window.innerHeight * 0.3) current = id;
+      if (el && el.getBoundingClientRect().top < window.innerHeight / 3) current = id;
     }
-    // Последний раздел может не доехать до верха — внизу страницы он текущий.
     if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) current = ids[ids.length - 1];
     setCurrent(current);
   };
