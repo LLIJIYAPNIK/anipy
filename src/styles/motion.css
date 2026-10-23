@@ -162,3 +162,37 @@ html.js [data-draw-circle] {
   transform: translateY(var(--parallax-y, 0));
   will-change: transform;
 }
+
+/* ── Переходы между страницами (#29) ─────────────────────────────────────────
+   View Transitions между документами: без поддержки — обычный переход. */
+
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+}
+
+@keyframes page-out {
+  to {
+    opacity: 0;
+    transform: translateY(calc(var(--rise-distance) * -1));
+  }
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--rise-distance));
+  }
+}
+
+::view-transition-old(root) {
+  animation: page-out var(--page-duration) var(--ease) both;
+}
+::view-transition-new(root) {
+  animation: page-in var(--page-duration) var(--ease-out) both;
+}
+
+/* Логотип в шапке остаётся на месте при смене страницы. */
+.logo img {
+  view-transition-name: site-logo;
+}
