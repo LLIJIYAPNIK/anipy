@@ -2,7 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import Logo from '../../components/Logo.astro';
 import LangSwitch from '../../components/LangSwitch.astro';
-import GithubIcon from '../../components/GithubIcon.astro';
+import GithubButton from '../../components/GithubButton.astro';
 import SdkPanel from '../../components/SdkPanel.astro';
 import { owner, sdks } from '../../data/sdks';
 import { langs, t, type Lang } from '../../i18n';
@@ -38,9 +38,7 @@ const ownerName = owner.split('/').pop();
     </section>
 
     <footer class="foot" data-rise style="--i: 5">
-      <a class="foot-github" href={owner} target="_blank" rel="noopener noreferrer" aria-label={`${ownerName} ${t(lang, 'nav.onGithub')}`}>
-        <GithubIcon />
-      </a>
+      <GithubButton href={owner} label={`${ownerName} ${t(lang, 'nav.onGithub')}`} />
       <span class="meta">{t(lang, 'site.footer')}</span>
     </footer>
 
@@ -157,14 +155,6 @@ const ownerName = owner.split('/').pop();
     align-items: center;
     gap: 0.875rem;
   }
-  .foot-github {
-    width: 2.75rem;
-    height: 2.75rem;
-    margin-left: -0.8125rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
   .panels {
     position: absolute;
     inset: var(--panels-top) var(--panels-right) 0 var(--intro-width);
@@ -259,9 +249,6 @@ const ownerName = owner.split('/').pop();
     .foot {
       order: 1;
       padding: 2rem 1.25rem 2.5rem;
-    }
-    .foot-github {
-      margin-left: -0.8125rem;
     }
   }
 </style>

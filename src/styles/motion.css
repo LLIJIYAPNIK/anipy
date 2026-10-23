@@ -5,23 +5,23 @@
 /* ── Наведение (#25) ─────────────────────────────────────────────────────────
    Префикс html — чтобы перебить scoped-стили компонентов той же специфичности. */
 
-/* Круглые кнопки GitHub: заливка белым, иконка чёрная и чуть поворачивается. */
-html :is(.github, .c-github) {
+/* Кнопка GitHub (components/GithubButton.astro) — одна на весь сайт:
+   заливка белым, иконка чёрная и чуть поворачивается. */
+html .gh-btn {
   transition:
     background-color var(--hover-duration) var(--ease-out),
     border-color var(--hover-duration) var(--ease-out),
     color var(--hover-duration) var(--ease-out);
 }
-html :is(.github, .c-github) svg,
-html .foot-github svg {
+html .gh-btn svg {
   transition: transform var(--hover-duration) var(--ease-out);
 }
-html :is(.github, .c-github):is(:hover, :focus-visible) {
+html .gh-btn:is(:hover, :focus-visible) {
   background-color: var(--ink);
   border-color: var(--ink);
   color: var(--ground);
 }
-html :is(.github, .c-github, .foot-github):is(:hover, :focus-visible) svg {
+html .gh-btn:is(:hover, :focus-visible) svg {
   transform: rotate(-12deg) scale(1.08);
 }
 
@@ -44,13 +44,13 @@ html :is(.go, .copy, .cov-copy, .cov-tool, .cov-chip, .run, .acc-docs):is(:hover
 }
 
 /* Текстовые ссылки и неактивный язык: подчёркивание вырастает слева направо. */
-html :is(.facts a, .crumbs a, a.source, .log-foot a, .c-docs, .foot a, .site-nav a, .lib a, .lang a, .lang-switch [aria-pressed='false']) {
+html :is(.facts a, .crumbs a, a.source, .log-foot a, .c-docs, .foot a:not(.gh-btn), .site-nav a, .lib a, .lang a, .lang-switch [aria-pressed='false']) {
   background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
   transition:
     background-size var(--hover-duration) var(--ease-out),
     color var(--hover-duration) var(--ease-out);
 }
-html :is(.facts a, .crumbs a, a.source, .log-foot a, .c-docs, .foot a, .site-nav a, .lib a, .lang a, .lang-switch [aria-pressed='false']):is(:hover, :focus-visible) {
+html :is(.facts a, .crumbs a, a.source, .log-foot a, .c-docs, .foot a:not(.gh-btn), .site-nav a, .lib a, .lang a, .lang-switch [aria-pressed='false']):is(:hover, :focus-visible) {
   background-size: 100% 1px;
   color: var(--ink);
 }

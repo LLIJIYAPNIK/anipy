@@ -1,7 +1,7 @@
 ---
 import Logo from './Logo.astro';
 import LangSwitch from './LangSwitch.astro';
-import GithubIcon from './GithubIcon.astro';
+import GithubButton from './GithubButton.astro';
 import { sdks, type Sdk } from '../data/sdks';
 import { t, type Lang } from '../i18n';
 
@@ -41,9 +41,7 @@ const { lang, sdk } = Astro.props;
       <a href={`/${lang}/about/`}>{t(lang, 'nav.about').toUpperCase()}</a>
     </nav>
     <div class="lang"><LangSwitch lang={lang} /></div>
-    <a class="github" href={sdk.github} target="_blank" rel="noopener noreferrer" aria-label={`${sdk.package} ${t(lang, 'nav.onGithub')}`}>
-      <GithubIcon />
-    </a>
+    <span class="gh"><GithubButton href={sdk.github} label={`${sdk.package} ${t(lang, 'nav.onGithub')}`} /></span>
   </div>
 </header>
 
@@ -123,14 +121,8 @@ const { lang, sdk } = Astro.props;
   .lang {
     margin-left: 0.5rem;
   }
-  .github {
-    margin-left: 0.75rem;
-    width: 2.75rem;
-    height: 2.75rem;
+  .gh {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--rule);
-    border-radius: 50%;
+    margin-left: 0.75rem;
   }
 </style>

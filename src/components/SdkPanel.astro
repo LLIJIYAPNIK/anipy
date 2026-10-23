@@ -1,5 +1,5 @@
 ---
-import GithubIcon from './GithubIcon.astro';
+import GithubButton from './GithubButton.astro';
 import type { Sdk } from '../data/sdks';
 import { t, type Lang } from '../i18n';
 
@@ -38,9 +38,7 @@ const id = `sdk-${sdk.package}`;
     <div class="facts"><span>/docs/{sdk.package}/</span><span>{meta}</span></div>
     <div class="actions">
       <span class="docs-cta" aria-hidden="true">{t(lang, 'nav.docs').toUpperCase()} ↗</span>
-      <a class="github" href={sdk.github} target="_blank" rel="noopener noreferrer" aria-label={githubLabel}>
-        <GithubIcon size={18} />
-      </a>
+      <GithubButton href={sdk.github} label={githubLabel} />
     </div>
   </div>
 </div>
@@ -72,9 +70,7 @@ const id = `sdk-${sdk.package}`;
     <div class="facts"><span>/docs/{sdk.package}/</span><span>{meta}</span></div>
     <div class="acc-actions">
       <a class="acc-docs" href={route}>{t(lang, 'nav.docs').toUpperCase()} <span aria-hidden="true">↗</span></a>
-      <a class="github" href={sdk.github} target="_blank" rel="noopener noreferrer" aria-label={githubLabel}>
-        <GithubIcon size={18} />
-      </a>
+      <GithubButton href={sdk.github} label={githubLabel} />
     </div>
     </div>
     </div>
@@ -194,20 +190,12 @@ const id = `sdk-${sdk.package}`;
     padding-bottom: 0.3125rem;
     border-bottom: 1px solid var(--ink);
   }
-  .github {
-    width: 2.75rem;
-    height: 2.75rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--rule);
-    border-radius: 50%;
-  }
-  .details .github {
+  /* Кнопка GitHub кликабельна, только когда подробности видны. */
+  .details :global(.gh-btn) {
     pointer-events: none;
   }
-  .panel:hover .details .github,
-  .panel:focus-within .details .github {
+  .panel:hover .details :global(.gh-btn),
+  .panel:focus-within .details :global(.gh-btn) {
     pointer-events: auto;
   }
 
@@ -340,11 +328,6 @@ const id = `sdk-${sdk.package}`;
       font-family: var(--font-mono);
       font-size: var(--meta-size-lg);
       letter-spacing: var(--meta-tracking);
-    }
-    .acc-actions .github {
-      flex: 0 0 var(--tap-min);
-      width: var(--tap-min);
-      height: var(--tap-min);
     }
   }
 </style>

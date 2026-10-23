@@ -1,7 +1,7 @@
 ---
 import Base from '../../../layouts/Base.astro';
 import SiteHeader from '../../../components/SiteHeader.astro';
-import GithubIcon from '../../../components/GithubIcon.astro';
+import GithubButton from '../../../components/GithubButton.astro';
 import { owner, sdks } from '../../../data/sdks';
 import { langs, t, type Key, type Lang } from '../../../i18n';
 
@@ -89,9 +89,7 @@ const chapters: { number: string; title: Key; paragraphs: Key[] }[] = [
               <a class="c-docs" href={`/${lang}/docs/${sdk.package}/`}>
                 {t(lang, 'nav.docs').toUpperCase()} ↗
               </a>
-              <a class="c-github" href={sdk.github} target="_blank" rel="noopener noreferrer" aria-label={`${sdk.package} ${t(lang, 'nav.onGithub')}`}>
-                <GithubIcon />
-              </a>
+              <GithubButton href={sdk.github} label={`${sdk.package} ${t(lang, 'nav.onGithub')}`} />
             </li>
           ))
         }
@@ -299,15 +297,6 @@ const chapters: { number: string; title: Key; paragraphs: Key[] }[] = [
     font-size: var(--meta-size-lg);
     letter-spacing: var(--meta-tracking);
     padding: 0.875rem 0;
-  }
-  .c-github {
-    width: 2.75rem;
-    height: 2.75rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--rule);
-    border-radius: 50%;
   }
 
   .foot {
