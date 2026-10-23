@@ -145,7 +145,10 @@ button.cov-row {
   border-bottom: 1px solid var(--rule-faint);
   transition: background-color var(--reveal-in);
 }
+/* Раскрытая строка — карточка: фон выходит за края таблицы, текст строки остаётся по колонкам. */
 .cov-op.is-open {
+  margin-inline: -1.5rem;
+  padding-inline: 1.5rem;
   background-color: var(--row-open);
 }
 .cov-op h3 {
@@ -221,7 +224,8 @@ button.cov-row {
 
 /* Раскрытая строка */
 .cov-panel {
-  padding: 0.75rem 0 2.75rem;
+  padding: 1.75rem 1.5rem 2.75rem;
+  border-top: 1px solid var(--rule-faint);
   display: flex;
   flex-wrap: wrap;
   gap: 2.25rem 0;
@@ -471,6 +475,13 @@ button.cov-row {
 }
 
 @media (max-width: 900px) {
+  .cov-op.is-open {
+    margin-inline: -0.75rem;
+    padding-inline: 0.75rem;
+  }
+  .cov-panel {
+    padding: 1.25rem 0 2rem;
+  }
   .cov-row {
     grid-template-columns: 4.5rem minmax(0, 1fr) 1.5rem;
   }
