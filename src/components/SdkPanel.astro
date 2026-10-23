@@ -6,9 +6,15 @@ import { t, type Lang } from '../i18n';
 interface Props {
   sdk: Sdk;
   lang: Lang;
+  /** Порядок панели: задержка появления и «письма» каны. */
+  index?: number;
 }
 
-const { sdk, lang } = Astro.props;
+const { sdk, lang, index = 0 } = Astro.props;
+// Панели появляются после вводного блока (data-rise --i 1–5 на главной).
+const order = `--i: ${index + 6}`;
+// Кана начинает «писаться» вместе с появлением своей панели.
+const drawOrder = `--d: ${index + 3}`;
 const route = `/${lang}/docs/${sdk.package}/`;
 const meta = `${sdk.license} · PYTHON ${sdk.python}`;
 const githubLabel = `${sdk.package} ${t(lang, 'nav.onGithub')}`;
@@ -16,11 +22,11 @@ const id = `sdk-${sdk.package}`;
 ---
 
 <!-- Десктоп: панель целиком — ссылка на документацию, GitHub — соседняя ссылка. -->
-<div class="panel">
+<div class="panel" data-rise style={order}>
   <a class="panel-link" href={route} aria-label={`${sdk.kana} — ${sdk.label[lang]}: ${sdk.package}, ${t(lang, 'nav.docs').toLowerCase()}`}></a>
 
   <div class="title" aria-hidden="true">
-    <span class="jp kana" lang="ja">{sdk.kana}</span>
+    <span class="jp kana" lang="ja" data-draw style={drawOrder}>{sdk.kana}</span>
     <span class="label">{sdk.label[lang]}</span>
   </div>
 
@@ -40,7 +46,7 @@ const id = `sdk-${sdk.package}`;
 </div>
 
 <!-- Мобильный: аккордеон. -->
-<section class="accordion">
+<section class="accordion" data-rise style={order}>
   <h2>
     <button type="button" aria-expanded="false" aria-controls={id}>
       <span class="acc-head">
@@ -58,7 +64,9 @@ const id = `sdk-${sdk.package}`;
       <span class="visually-hidden">{sdk.label[lang]} — {sdk.platform}</span>
     </button>
   </h2>
-  <div class="acc-body" id={id} hidden>
+  <div class="acc-body" id={id} inert>
+    <div class="acc-inner">
+    <div class="acc-content">
     <div class="meta">{sdk.platform}</div>
     <p class="description">{sdk.description[lang]}</p>
     <div class="facts"><span>/docs/{sdk.package}/</span><span>{meta}</span></div>
@@ -67,6 +75,8 @@ const id = `sdk-${sdk.package}`;
       <a class="github" href={sdk.github} target="_blank" rel="noopener noreferrer" aria-label={githubLabel}>
         <GithubIcon size={18} />
       </a>
+    </div>
+    </div>
     </div>
   </div>
 </section>
@@ -211,9 +221,9 @@ const id = `sdk-${sdk.package}`;
     .accordion {
       display: block;
       border-bottom: 1px solid var(--divider);
-      transition: background-color 400ms;
+      transition: background-color var(--expand-duration);
     }
-    .accordion:has([aria-expanded='true']) {
+    .accordion.is-open {
       background-color: var(--panel-hover);
     }
     h2 {
@@ -253,7 +263,7 @@ const id = `sdk-${sdk.package}`;
     }
     .acc-state svg {
       color: var(--ink);
-      transition: transform 400ms var(--ease);
+      transition: transform var(--expand-duration) var(--ease);
     }
     [aria-expanded='true'] .acc-state svg {
       transform: rotate(45deg);
@@ -284,7 +294,24 @@ const id = `sdk-${sdk.package}`;
       font-size: 0.75rem;
       padding-top: 1.375rem;
     }
+    /* Высота раскрывается плавно: grid-template-rows 0fr ↔ 1fr. */
     .acc-body {
+      display: grid;
+      grid-template-rows: 0fr;
+      opacity: 0;
+      transition:
+        grid-template-rows var(--expand-duration) var(--ease),
+        opacity var(--expand-duration) var(--ease);
+    }
+    .accordion.is-open .acc-body {
+      grid-template-rows: 1fr;
+      opacity: 1;
+    }
+    .acc-inner {
+      min-height: 0;
+      overflow: hidden;
+    }
+    .acc-content {
       padding: 2.25rem 1.25rem 2rem;
       border-top: 1px solid var(--divider);
     }

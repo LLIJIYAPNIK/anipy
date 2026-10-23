@@ -209,7 +209,7 @@ button.cov-row {
   padding-top: 0.25rem;
 }
 .cov-plus svg {
-  transition: transform 420ms var(--ease-out);
+  transition: transform var(--expand-duration) var(--ease-out);
 }
 [aria-expanded='true'] .cov-plus svg {
   transform: rotate(45deg);
@@ -223,6 +223,19 @@ button.cov-row {
 }
 
 /* Раскрытая строка */
+/* Высота раскрывается и сворачивается плавно (keyframes expand / collapse в motion.css). */
+.cov-panel-wrap {
+  display: grid;
+  grid-template-rows: 1fr;
+  animation: expand var(--expand-duration) var(--ease) both;
+}
+.cov-panel-wrap.is-closing {
+  animation-name: collapse;
+}
+.cov-panel-inner {
+  min-height: 0;
+  overflow: hidden;
+}
 .cov-panel {
   padding: 1.75rem 1.5rem 2.75rem;
   border-top: 1px solid var(--rule-faint);

@@ -28,16 +28,16 @@ const ownerName = owner.split('/').pop();
     </div>
 
     <section class="intro">
-      <div class="name">
+      <div class="name" data-rise style="--i: 1">
         <h1 class="jp">ANIPY</h1>
         <span class="name-sub">{t(lang, 'site.name')}</span>
       </div>
-      <p class="jp-line jp" lang="ja">アニメ・ラノベ・漫画のための<br />Python SDK コレクション。</p>
-      <p class="tagline">{t(lang, 'site.tagline')}</p>
-      <p class="lead">{t(lang, 'site.intro')}</p>
+      <p class="jp-line jp" lang="ja" data-rise style="--i: 2">アニメ・ラノベ・漫画のための<br />Python SDK コレクション。</p>
+      <p class="tagline" data-rise style="--i: 3">{t(lang, 'site.tagline')}</p>
+      <p class="lead" data-rise style="--i: 4">{t(lang, 'site.intro')}</p>
     </section>
 
-    <footer class="foot">
+    <footer class="foot" data-rise style="--i: 5">
       <a class="foot-github" href={owner} target="_blank" rel="noopener noreferrer" aria-label={`${ownerName} ${t(lang, 'nav.onGithub')}`}>
         <GithubIcon />
       </a>
@@ -45,7 +45,7 @@ const ownerName = owner.split('/').pop();
     </footer>
 
     <nav class="panels" aria-label={t(lang, 'nav.collection')}>
-      {sdks.map((sdk) => <SdkPanel sdk={sdk} lang={lang} />)}
+      {sdks.map((sdk, i) => <SdkPanel sdk={sdk} lang={lang} index={i} />)}
     </nav>
   </div>
 </Base>
@@ -55,8 +55,10 @@ const ownerName = owner.split('/').pop();
     button.addEventListener('click', () => {
       const open = button.getAttribute('aria-expanded') !== 'true';
       button.setAttribute('aria-expanded', String(open));
+      // Высота раскрывается плавно (SdkPanel.astro); закрытое содержимое недоступно с клавиатуры.
+      button.closest('.accordion')?.classList.toggle('is-open', open);
       const body = document.getElementById(button.getAttribute('aria-controls') ?? '');
-      if (body) body.hidden = !open;
+      if (body) body.inert = !open;
     });
   }
 </script>

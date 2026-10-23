@@ -48,12 +48,12 @@ const actions = (lang: Lang): Action[] =>
       langs.map((lang) => (
         <main class="content" data-lang={lang} lang={lang} hidden={lang !== 'ru'}>
           <div class="meta eyebrow">{t(lang, 'error.eyebrow')}</div>
-          <div class="code" aria-hidden="true">
+          <div class="code" aria-hidden="true" data-rise style="--i: 1">
             {code}
           </div>
-          <h1>{t(lang, `error.${code}.title`)}</h1>
-          <p class="body">{t(lang, `error.${code}.body`)}</p>
-          <nav class="actions" aria-label={t(lang, 'error.nav')}>
+          <h1 data-rise style="--i: 2">{t(lang, `error.${code}.title`)}</h1>
+          <p class="body" data-rise style="--i: 3">{t(lang, `error.${code}.body`)}</p>
+          <nav class="actions" data-rise style="--i: 4" aria-label={t(lang, 'error.nav')}>
             {actions(lang).map((a) =>
               a.retry ? (
                 <button type="button" class="go primary" data-retry>
@@ -76,7 +76,7 @@ const actions = (lang: Lang): Action[] =>
 
     <div class="panel" aria-hidden="true">
       <div class="panel-title">
-        <span class="jp" lang="ja">{kana}</span>
+        <span class="jp" lang="ja" data-draw style="--i: 2">{kana}</span>
         {
           langs.map((lang) => (
             <span class="panel-label" data-lang={lang} hidden={lang !== 'ru'}>

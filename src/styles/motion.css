@@ -1,0 +1,240 @@
+/* Движение по всему сайту — только чёрный и белый, тайминги из tokens.css.
+   При prefers-reduced-motion длительности нулевые: всё на месте сразу.
+   Скрытые до появления состояния — только при html.js, без JS контент виден. */
+
+/* ── Наведение (#25) ─────────────────────────────────────────────────────────
+   Префикс html — чтобы перебить scoped-стили компонентов той же специфичности. */
+
+/* Круглые кнопки GitHub: заливка белым, иконка чёрная и чуть поворачивается. */
+html :is(.github, .c-github) {
+  transition:
+    background-color var(--hover-duration) var(--ease-out),
+    border-color var(--hover-duration) var(--ease-out),
+    color var(--hover-duration) var(--ease-out);
+}
+html :is(.github, .c-github) svg,
+html .foot-github svg {
+  transition: transform var(--hover-duration) var(--ease-out);
+}
+html :is(.github, .c-github):is(:hover, :focus-visible) {
+  background-color: var(--ink);
+  border-color: var(--ink);
+  color: var(--ground);
+}
+html :is(.github, .c-github, .foot-github):is(:hover, :focus-visible) svg {
+  transform: rotate(-12deg) scale(1.08);
+}
+
+/* Кнопки с рамкой: инверсия. */
+html :is(.go, .copy, .cov-copy, .cov-tool, .cov-chip, .run, .acc-docs) {
+  transition:
+    background-color var(--hover-duration) var(--ease-out),
+    border-color var(--hover-duration) var(--ease-out),
+    color var(--hover-duration) var(--ease-out);
+}
+html :is(.go, .copy, .cov-copy, .cov-tool, .cov-chip, .run, .acc-docs):is(:hover, :focus-visible) {
+  background-color: var(--ink);
+  border-color: var(--ink);
+  color: var(--ground);
+}
+
+/* Текстовые ссылки: подчёркивание вырастает слева направо. */
+html :is(.facts a, .crumbs a, a.source, .log-foot a, .c-docs, .foot a, .site-nav a, .lib a) {
+  background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+  transition:
+    background-size var(--hover-duration) var(--ease-out),
+    color var(--hover-duration) var(--ease-out);
+}
+html :is(.facts a, .crumbs a, a.source, .log-foot a, .c-docs, .foot a, .site-nav a, .lib a):is(:hover, :focus-visible) {
+  background-size: 100% 1px;
+  color: var(--ink);
+}
+
+/* Меню документации и оглавление: пункт чуть сдвигается. */
+html :is(.side-nav a, .toc a) {
+  transition:
+    color var(--hover-duration) var(--ease-out),
+    border-color var(--hover-duration) var(--ease-out),
+    transform var(--hover-duration) var(--ease-out);
+}
+html :is(.side-nav a, .toc a):hover {
+  color: var(--ink);
+  transform: translateX(0.25rem);
+}
+
+/* Логотип: энсо поворачивается, как кисть перед мазком. */
+html .logo img {
+  transition: transform var(--logo-duration) var(--ease-out);
+}
+html .logo:is(:hover, :focus-visible) img {
+  transform: rotate(-14deg) scale(1.04);
+}
+
+/* Строки и карточки: фон чуть светлее. */
+html :is(.cov-op, .list li, .collection li, .release) {
+  transition: background-color var(--hover-duration) var(--ease-out);
+}
+html :is(.cov-op:not(.is-open), .list li, .collection li):hover {
+  background-color: var(--row-hover);
+}
+
+/* Карточки «Далее» и «Покрытие API»: стрелка и знак уходят по направлению перехода. */
+html :is(.others a .other-mark, .coverage-card .coverage-arrow) {
+  transition: transform var(--hover-duration) var(--ease-out);
+}
+html .others a:hover .other-mark {
+  transform: translateX(-0.375rem);
+}
+html .coverage-card:hover .coverage-arrow {
+  transform: translateX(0.375rem);
+}
+
+/* ── Появление (#26) ─────────────────────────────────────────────────────────
+   data-rise — при загрузке, по очереди (--i); data-reveal — когда блок доезжает
+   до экрана (scripts/motion.ts ставит .is-revealed). */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--rise-distance));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+html.js [data-rise] {
+  animation: rise var(--rise-duration) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * var(--stagger));
+}
+
+html.js [data-reveal]:not(.is-revealed) {
+  opacity: 0;
+}
+html.js [data-reveal].is-revealed {
+  animation: rise var(--rise-duration) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * var(--stagger));
+}
+
+/* ── «Письмо» каны и энсо (#27) ─────────────────────────────────────────────
+   Вертикальная кана проявляется сверху вниз, как при письме кистью. */
+
+@keyframes draw-down {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* --d — своя очередь «письма»; без неё — общая --i. */
+html.js [data-draw] {
+  animation: draw-down var(--draw-duration) var(--ease) both;
+  animation-delay: calc(var(--d, var(--i, 0)) * var(--stagger) * 2);
+}
+
+/* Энсо дорисовывается по кругу. Без @property угол сразу 360deg — круг виден целиком. */
+@property --sweep {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 360deg;
+}
+
+@keyframes sweep {
+  from {
+    --sweep: 0deg;
+  }
+  to {
+    --sweep: 360deg;
+  }
+}
+
+html.js [data-draw-circle] {
+  mask-image: conic-gradient(from -90deg, #000 var(--sweep), transparent var(--sweep));
+  animation: sweep calc(var(--draw-duration) * 1.4) var(--ease) both;
+}
+
+/* ── Параллакс (#28) — scripts/motion.ts задаёт --parallax-y. ─────────────── */
+
+[data-parallax] {
+  transform: translateY(var(--parallax-y, 0));
+  will-change: transform;
+}
+
+/* ── Переходы между страницами (#29) ─────────────────────────────────────────
+   View Transitions между документами: без поддержки — обычный переход. */
+
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+}
+
+@keyframes page-out {
+  to {
+    opacity: 0;
+    transform: translateY(calc(var(--rise-distance) * -1));
+  }
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--rise-distance));
+  }
+}
+
+::view-transition-old(root) {
+  animation: page-out var(--page-duration) var(--ease) both;
+}
+::view-transition-new(root) {
+  animation: page-in var(--page-duration) var(--ease-out) both;
+}
+
+/* Логотип в шапке остаётся на месте при смене страницы. */
+.logo img {
+  view-transition-name: site-logo;
+}
+
+/* ── Раскрытие и вкладки (#30) ───────────────────────────────────────────────
+   Высота анимируется через grid-template-rows: 0fr ↔ 1fr. */
+
+@keyframes expand {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+  to {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
+@keyframes collapse {
+  from {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+  to {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+
+/* Панель вкладки или отфильтрованный элемент появляются плавно. Свои keyframes —
+   чтобы анимация перезапускалась и у блоков, уже показанных через data-reveal. */
+@keyframes tab-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--rise-distance));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+html .tab-enter,
+html.js [data-reveal].is-revealed.tab-enter {
+  animation: tab-rise var(--rise-duration) var(--ease-out) both;
+}

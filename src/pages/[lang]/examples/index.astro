@@ -33,19 +33,19 @@ const tabs = [
 
   <main class="page">
     <div class="intro">
-      <div class="intro-text">
+      <div class="intro-text" data-rise>
         <div class="meta eyebrow">{eyebrow}</div>
         <h1>{t(lang, 'examples.title')}</h1>
         <p class="lead">{t(lang, 'examples.lead')}</p>
         <p class="note">{t(lang, 'examples.note')}</p>
       </div>
-      <span class="vertical" aria-hidden="true">
-        <span class="jp" lang="ja">実例</span>
+      <span class="vertical" aria-hidden="true" data-parallax>
+        <span class="jp" lang="ja" data-draw>実例</span>
         <span class="vertical-label">{t(lang, 'examples.vertical')}</span>
       </span>
     </div>
 
-    <div class="tabs" role="tablist" aria-label="SDK">
+    <div class="tabs" role="tablist" aria-label="SDK" data-rise style="--i: 2">
       {
         tabs.map((tab, i) => (
           <button type="button" role="tab" aria-selected={i === 0 ? 'true' : 'false'} aria-controls="examples-list" data-filter={tab.id}>
@@ -64,8 +64,8 @@ const tabs = [
 
     <ul id="examples-list" role="tabpanel" class="list">
       {
-        examples.map((e) => (
-          <li data-package={e.sdk.package}>
+        examples.map((e, i) => (
+          <li data-package={e.sdk.package} data-reveal style={`--i: ${i % 2}`}>
             <span class="num-big" aria-hidden="true">
               {e.num}
             </span>
@@ -103,16 +103,22 @@ const tabs = [
 </Base>
 
 <script>
+  import { playEnter } from '../../../scripts/tabs';
+
   // Вкладки фильтруют один список; #<package> открывает вкладку пакета.
   const tabs = [...document.querySelectorAll<HTMLButtonElement>('[role=tab][data-filter]')];
   const items = [...document.querySelectorAll<HTMLLIElement>('#examples-list li')];
-  const select = (tab: HTMLButtonElement, focus = false) => {
+  const select = (tab: HTMLButtonElement, focus = false, animate = true) => {
     const filter = tab.dataset.filter!;
     for (const other of tabs) {
       other.setAttribute('aria-selected', String(other === tab));
       other.tabIndex = other === tab ? 0 : -1;
     }
-    for (const item of items) item.hidden = filter !== 'all' && item.dataset.package !== filter;
+    for (const item of items) {
+      item.hidden = filter !== 'all' && item.dataset.package !== filter;
+      // Оставшиеся карточки появляются заново — видно, что список сменился.
+      if (!item.hidden && animate) playEnter(item);
+    }
     if (focus) tab.focus();
     history.replaceState(null, '', filter === 'all' ? location.pathname : `#${filter}`);
   };
@@ -124,7 +130,7 @@ const tabs = [
     });
   }
   const fromHash = tabs.find((tab) => `#${tab.dataset.filter}` === location.hash);
-  if (fromHash) select(fromHash);
+  if (fromHash) select(fromHash, false, false);
 
   for (const button of document.querySelectorAll<HTMLButtonElement>('.run')) {
     const label = button.querySelector('[aria-live]')!;

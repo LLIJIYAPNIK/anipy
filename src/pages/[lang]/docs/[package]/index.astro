@@ -38,10 +38,10 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
 
   <div class="layout">
     <aside class="side">
-      <div class="mark" aria-hidden="true">
+      <div class="mark" aria-hidden="true" data-parallax>
         <span class="num">{sdk.number}</span>
         <span class="mark-title">
-          <span class="jp" lang="ja">{sdk.kana}</span>
+          <span class="jp" lang="ja" data-draw>{sdk.kana}</span>
           <span class="mark-label">{sdk.label[lang]}</span>
         </span>
       </div>
@@ -61,10 +61,10 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
 
     <main class="main">
       <article>
-        <div id="overview" class="meta overline">{sdk.number} — {sdk.label[lang].toUpperCase()} · {sdk.platform.toUpperCase()}</div>
-        <h1>{sdk.package}</h1>
-        <p class="description">{sdk.description[lang]}</p>
-        <div class="facts meta">
+        <div id="overview" class="meta overline" data-rise style="--i: 0">{sdk.number} — {sdk.label[lang].toUpperCase()} · {sdk.platform.toUpperCase()}</div>
+        <h1 data-rise style="--i: 1">{sdk.package}</h1>
+        <p class="description" data-rise style="--i: 2">{sdk.description[lang]}</p>
+        <div class="facts meta" data-rise style="--i: 3">
           <span>PYTHON {sdk.python}</span>
           <span>{t(lang, 'docs.license').toUpperCase()} {sdk.license}</span>
           <a href={`https://pypi.org/project/${sdk.package}/`} target="_blank" rel="noopener noreferrer">PYPI ↗</a>
@@ -78,7 +78,7 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
 
         {
           readme?.install.length ? (
-            <section>
+            <section data-reveal>
               <h2 id="install">{t(lang, 'docs.install')}</h2>
               <p class="text">{t(lang, 'docs.installText')}</p>
               <CodeBlock lang={lang} caption="SHELL" copyLabel={t(lang, 'docs.copyInstall')} copy={readme.install.join('\n')}>
@@ -96,7 +96,7 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
 
         {
           readme?.quickstart && (
-            <section>
+            <section data-reveal>
               <h2 id="quickstart">{t(lang, 'docs.quickstart')}</h2>
               {sdk.quickstartIntro && <p class="text">{sdk.quickstartIntro[lang]}</p>}
               <CodeBlock lang={lang} caption="PYTHON" copyLabel={t(lang, 'docs.copyQuickstart')} copy={readme.quickstart} code={readme.quickstart} />
@@ -106,7 +106,7 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
 
         {
           sdk.api && (
-            <section>
+            <section data-reveal>
               <h2 id="api">{t(lang, 'docs.api')}</h2>
               <div class="table-wrap">
                 <table>
@@ -139,7 +139,7 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
           )
         }
 
-        <nav class="others" aria-label={t(lang, 'docs.otherSdks')}>
+        <nav class="others" data-reveal aria-label={t(lang, 'docs.otherSdks')}>
           {
             others.map((other, i) => (
               <a href={`/${lang}/docs/${other.package}/`}>

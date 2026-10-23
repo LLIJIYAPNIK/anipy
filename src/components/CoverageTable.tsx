@@ -1,6 +1,6 @@
 // Таблица покрытия API — единственный остров сайта: фильтры, поиск, раскрытие строк.
 // Подробности операций грузятся одним JSON при первом раскрытии.
-import { useEffect, useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { CoverageDetail, CoverageRow } from '../lib/coverage';
 import './CoverageTable.css';
 
@@ -41,6 +41,14 @@ const formatSig = (sig: string) => {
   }
   if (cur.trim()) parts.push(cur.trim());
   return sig.slice(0, open + 1) + '\n' + parts.map((p) => `    ${p},`).join('\n') + '\n' + sig.slice(close);
+};
+
+/** Длительность раскрытия из --expand-duration в мс; при reduced motion — 0.
+ *  Минификатор CSS в сборке пишет 420ms как .42s — учитываем единицы. */
+const expandMs = () => {
+  const value = getComputedStyle(document.documentElement).getPropertyValue('--expand-duration').trim();
+  const n = parseFloat(value) || 0;
+  return value.endsWith('ms') ? n : value.endsWith('s') ? n * 1000 : n;
 };
 
 const panelId = (key: string) => 'op-' + key.replace(/[^a-z0-9]+/gi, '-');
@@ -250,12 +258,49 @@ export default function CoverageTable({ rows, groups, labels, detailsUrl, sdkPac
     );
   }, [rows, status, auth, query]);
 
-  const toggle = (key: string) =>
-    setOpen((prev) => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
+  // Сворачиваемая строка остаётся в DOM, пока играет анимация, — потом убирается.
+  const [closing, setClosing] = useState<Set<string>>(new Set());
+  // Свой таймер на каждую строку: повторное раскрытие его отменяет, новое закрытие —
+  // перезапускает. Иначе таймер первого закрытия оборвал бы анимацию второго.
+  const closeTimers = useRef(new Map<string, number>());
+
+  const without = (set: Set<string>, keys: string[]) => new Set([...set].filter((k) => !keys.includes(k)));
+
+  const cancelClose = (key: string) => {
+    clearTimeout(closeTimers.current.get(key));
+    closeTimers.current.delete(key);
+  };
+
+  const close = (keys: string[]) => {
+    if (!keys.length) return;
+    setClosing((prev) => new Set([...prev, ...keys]));
+    const ms = expandMs();
+    for (const key of keys) {
+      cancelClose(key);
+      closeTimers.current.set(
+        key,
+        window.setTimeout(() => {
+          closeTimers.current.delete(key);
+          setOpen((prev) => without(prev, [key]));
+          setClosing((prev) => without(prev, [key]));
+        }, ms),
+      );
+    }
+  };
+
+  const reopen = (keys: string[]) => {
+    for (const key of keys) cancelClose(key);
+    setClosing((prev) => without(prev, keys));
+  };
+
+  const toggle = (key: string) => {
+    if (closing.has(key)) reopen([key]);
+    else if (open.has(key)) close([key]);
+    else setOpen((prev) => new Set([...prev, key]));
+  };
+
+  // Таймеры не переживают таблицу.
+  useEffect(() => () => closeTimers.current.forEach((id) => clearTimeout(id)), []);
 
   const chips = <T extends string>(label: string, value: T, set: (v: T) => void, options: [T, string][]) => (
     <div role="group" aria-label={label} class="cov-chips">
@@ -302,10 +347,13 @@ export default function CoverageTable({ rows, groups, labels, detailsUrl, sdkPac
           {labels.shown.replace('{n}', String(visible.length)).replace('{total}', String(rows.length))}
         </span>
         <div class="cov-tools">
-          <button type="button" class="cov-tool" onClick={() => setOpen(new Set(visible.map((r) => r.key)))}>
+          <button type="button" class="cov-tool" onClick={() => {
+              reopen([...closing]);
+              setOpen(new Set(visible.map((r) => r.key)));
+            }}>
             {labels.expandAll}
           </button>
-          <button type="button" class="cov-tool" onClick={() => setOpen(new Set())}>
+          <button type="button" class="cov-tool" onClick={() => close([...open])}>
             {labels.collapseAll}
           </button>
         </div>
@@ -332,11 +380,12 @@ export default function CoverageTable({ rows, groups, labels, detailsUrl, sdkPac
                 <span class="cov-group-count">{groupRows.length}</span>
               </h2>
               {groupRows.map((r) => {
-                const isOpen = open.has(r.key);
+                const isClosing = closing.has(r.key);
+                const isOpen = open.has(r.key) && !isClosing;
                 const note = r.status === 'dup' ? labels.dup : r.status === 'ads' ? labels.ads : undefined;
                 const detail = details?.[r.key];
                 return (
-                  <div class={`cov-op${isOpen ? ' is-open' : ''}`} key={r.key}>
+                  <div class={`cov-op${open.has(r.key) ? ' is-open' : ''}`} key={r.key}>
                     <h3>
                       <button type="button" aria-expanded={isOpen} aria-controls={panelId(r.key)} class="cov-row" onClick={() => toggle(r.key)}>
                         <span>
@@ -357,7 +406,9 @@ export default function CoverageTable({ rows, groups, labels, detailsUrl, sdkPac
                         </span>
                       </button>
                     </h3>
-                    {isOpen && (
+                    {open.has(r.key) && (
+                      <div class={`cov-panel-wrap${isClosing ? ' is-closing' : ''}`}>
+                      <div class="cov-panel-inner">
                       <div id={panelId(r.key)} class="cov-panel">
                         {failed ? (
                           <p class="cov-empty-note">{labels.failed}</p>
@@ -366,6 +417,8 @@ export default function CoverageTable({ rows, groups, labels, detailsUrl, sdkPac
                         ) : detail ? (
                           <Detail row={r} detail={detail} labels={labels} sdkPackage={sdkPackage} />
                         ) : null}
+                      </div>
+                      </div>
                       </div>
                     )}
                   </div>

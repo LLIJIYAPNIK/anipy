@@ -19,6 +19,10 @@ const { lang, title, description } = Astro.props;
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
     <link rel="icon" href="/logo.png" />
+    <!-- До первой отрисовки: анимации появления включаются только при работающем JS. -->
+    <script is:inline>
+      document.documentElement.classList.add('js');
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -28,5 +32,8 @@ const { lang, title, description } = Astro.props;
   </head>
   <body>
     <slot />
+    <script>
+      import '../scripts/motion';
+    </script>
   </body>
 </html>

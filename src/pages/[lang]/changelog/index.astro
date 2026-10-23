@@ -31,18 +31,18 @@ const earlierText = (n: number, from: string, to: string) =>
 
   <main class="page">
     <div class="intro">
-      <div class="intro-text">
+      <div class="intro-text" data-rise>
         <div class="meta eyebrow">{t(lang, 'changelog.eyebrow')}</div>
         <h1>{t(lang, 'changelog.title')}</h1>
         <p class="lead">{t(lang, 'changelog.lead')}</p>
       </div>
-      <span class="vertical" aria-hidden="true">
-        <span class="jp" lang="ja">更新</span>
+      <span class="vertical" aria-hidden="true" data-parallax>
+        <span class="jp" lang="ja" data-draw>更新</span>
         <span class="vertical-label">{t(lang, 'changelog.vertical')}</span>
       </span>
     </div>
 
-    <div class="tabs" role="tablist">
+    <div class="tabs" role="tablist" data-rise style="--i: 2">
       {
         logs.map(({ sdk, releases }, i) => (
           <button
@@ -70,7 +70,7 @@ const earlierText = (n: number, from: string, to: string) =>
         <div class="log" role="tabpanel" id={`log-${sdk.package}`} aria-labelledby={`tab-${sdk.package}`} hidden={i !== 0}>
           <ol lang="en">
             {releases.map((release, r) => (
-              <li class="release">
+              <li class="release" data-reveal>
                 <div class="release-head">
                   <h2>{release.version}</h2>
                   <div class="release-meta">
