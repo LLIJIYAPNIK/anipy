@@ -19,17 +19,17 @@
   --font-latin: 'Cormorant Garamond', 'EB Garamond', Georgia, serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --jp-size: 86px;
-  --jp-size-docs: 56px;
-  --meta-size: 10px;
-  --meta-size-lg: 11px;
+  --jp-size: 5.375rem;
+  --jp-size-docs: 3.5rem;
+  --meta-size: 0.625rem;
+  --meta-size-lg: 0.6875rem;
   --meta-tracking: 0.2em;
 
-  --page-gutter: 56px;
-  --panels-top: 100px;
-  --panels-right: 72px;
-  --intro-width: 576px;
-  --tap-min: 44px;
+  --page-gutter: 3.5rem;
+  --panels-top: 6.25rem;
+  --panels-right: 4.5rem;
+  --intro-width: 36rem;
+  --tap-min: 2.75rem;
 
   --ease: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -42,9 +42,9 @@
 
 @media (max-width: 767px) {
   :root {
-    --jp-size: 62px;
-    --page-gutter: 20px;
-    --tap-min: 48px;
+    --jp-size: 3.875rem;
+    --page-gutter: 1.25rem;
+    --tap-min: 3rem;
   }
 }
 

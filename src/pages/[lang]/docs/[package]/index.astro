@@ -187,13 +187,43 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
   const setCurrent = (id: string) => {
     for (const a of links) a.setAttribute('aria-current', a.dataset.toc === id ? 'location' : 'false');
   };
+
+  // Пока идёт прокрутка после клика, подсветка остаётся на выбранном пункте:
+  // короткие нижние разделы не доезжают до верха, и иначе она «перескакивала» бы.
+  let locked = false;
+  let unlockTimer = 0;
+  const unlock = () => {
+    locked = false;
+    clearTimeout(unlockTimer);
+  };
+  window.addEventListener('scrollend', unlock);
+  // Ручная прокрутка колесом, тачем или клавишами отменяет блокировку сразу.
+  for (const type of ['wheel', 'touchstart', 'keydown']) window.addEventListener(type, unlock, { passive: true });
+
+  for (const a of links) {
+    a.addEventListener('click', (event) => {
+      const target = document.getElementById(a.dataset.toc!);
+      if (!target) return;
+      event.preventDefault();
+      setCurrent(a.dataset.toc!);
+      locked = true;
+      // Запасной выход для браузеров без scrollend и для случая, когда прокручивать некуда.
+      clearTimeout(unlockTimer);
+      unlockTimer = window.setTimeout(unlock, 1200);
+      target.scrollIntoView({ block: 'start' });
+      history.replaceState(null, '', `#${a.dataset.toc}`);
+    });
+  }
+
+  // Текущий раздел — последний, чей заголовок прошёл верхнюю треть окна.
+  // В самом низу страницы, куда пользователь докрутил сам, — последний раздел.
   const update = () => {
+    if (locked) return;
     let current = ids[0];
     for (const id of ids) {
       const el = document.getElementById(id);
-      if (el && el.getBoundingClientRect().top < window.innerHeight * 0.3) current = id;
+      if (el && el.getBoundingClientRect().top < window.innerHeight / 3) current = id;
     }
-    // Последний раздел может не доехать до верха — внизу страницы он текущий.
     if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) current = ids[ids.length - 1];
     setCurrent(current);
   };
@@ -203,7 +233,7 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
 
 <style>
   .layout {
-    max-width: 1440px;
+    max-width: 90rem;
     margin: 0 auto;
     display: flex;
     flex-wrap: wrap;
@@ -211,23 +241,23 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
 
   /* Левая колонка */
   .side {
-    flex: 1 1 240px;
-    max-width: 300px;
-    padding: 48px 32px 48px var(--page-gutter);
+    flex: 1 1 15rem;
+    max-width: 18.75rem;
+    padding: 3rem 2rem 3rem var(--page-gutter);
     border-right: 1px solid var(--divider);
     display: flex;
     flex-direction: column;
-    gap: 44px;
+    gap: 2.75rem;
   }
   .mark {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    gap: 16px;
+    gap: 1rem;
   }
   .mark .num {
     font-weight: 300;
-    font-size: 64px;
+    font-size: 4rem;
     line-height: 0.8;
     letter-spacing: 0.04em;
   }
@@ -235,7 +265,7 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
     display: flex;
     flex-direction: row-reverse;
     align-items: flex-start;
-    gap: 6px;
+    gap: 0.375rem;
   }
   .mark-title .jp {
     writing-mode: vertical-rl;
@@ -243,15 +273,15 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
   }
   .mark-label {
     writing-mode: vertical-rl;
-    font-size: 11px;
+    font-size: 0.6875rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    padding-top: 4px;
+    padding-top: 0.25rem;
   }
   .side-nav {
     display: flex;
     flex-direction: column;
-    gap: 28px;
+    gap: 1.75rem;
   }
   .group {
     display: flex;
@@ -259,11 +289,11 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
   }
   .group-title {
     letter-spacing: 0.22em;
-    padding-bottom: 8px;
+    padding-bottom: 0.5rem;
   }
   .side-nav a {
-    font-size: 18px;
-    padding: 8px 0 8px 14px;
+    font-size: 1.125rem;
+    padding: 0.5rem 0 0.5rem 0.875rem;
     border-left: 1px solid var(--divider);
     color: var(--secondary);
   }
@@ -277,34 +307,34 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
 
   /* Контент */
   .main {
-    flex: 999 1 560px;
+    flex: 999 1 35rem;
     min-width: 0;
-    padding: 72px 72px 96px;
+    padding: 4.5rem 4.5rem 6rem;
   }
   article {
-    max-width: 720px;
+    max-width: 45rem;
   }
   .overline {
     font-size: var(--meta-size-lg);
   }
   h1 {
-    margin: 20px 0 0;
+    margin: 1.25rem 0 0;
     font-family: var(--font-mono);
     font-weight: 400;
-    font-size: 44px;
+    font-size: 2.75rem;
     letter-spacing: -0.01em;
     line-height: 1.1;
   }
   .description {
-    margin: 24px 0 0;
-    font-size: 25px;
+    margin: 1.5rem 0 0;
+    font-size: 1.5625rem;
     line-height: 1.4;
   }
   .facts {
-    margin-top: 28px;
+    margin-top: 1.75rem;
     display: flex;
     flex-wrap: wrap;
-    gap: 12px 28px;
+    gap: 0.75rem 1.75rem;
     font-size: var(--meta-size-lg);
     letter-spacing: 0.16em;
     color: var(--secondary);
@@ -315,20 +345,20 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
   .divider {
     height: 1px;
     background: var(--divider);
-    margin: 56px 0;
+    margin: 3.5rem 0;
   }
   section + section {
-    margin-top: 64px;
+    margin-top: 4rem;
   }
   h2 {
     margin: 0;
     font-weight: 500;
-    font-size: 34px;
+    font-size: 2.125rem;
     line-height: 1.2;
   }
   .text {
-    margin: 16px 0 0;
-    font-size: 19px;
+    margin: 1rem 0 0;
+    font-size: 1.1875rem;
     line-height: 1.6;
     color: var(--body-soft);
   }
@@ -336,18 +366,18 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
     color: var(--muted);
   }
   .table-wrap {
-    margin-top: 24px;
+    margin-top: 1.5rem;
     overflow-x: auto;
     border-top: 1px solid var(--divider);
   }
   table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 18px;
+    font-size: 1.125rem;
   }
   th {
     text-align: left;
-    padding: 14px 16px 14px 0;
+    padding: 0.875rem 1rem 0.875rem 0;
     font-family: var(--font-mono);
     font-weight: 400;
     font-size: var(--meta-size);
@@ -356,24 +386,24 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
     border-bottom: 1px solid var(--divider);
   }
   td {
-    padding: 16px 0;
+    padding: 1rem 0;
     border-bottom: 1px solid var(--divider);
     color: var(--body-soft);
   }
   .api-name {
-    padding-right: 16px;
+    padding-right: 1rem;
     font-family: var(--font-mono);
-    font-size: 13px;
+    font-size: 0.8125rem;
     white-space: nowrap;
     color: var(--ink);
   }
   .coverage-card {
-    margin-top: 28px;
+    margin-top: 1.75rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 24px;
-    padding: 24px 28px;
+    gap: 1.5rem;
+    padding: 1.5rem 1.75rem;
     border: 1px solid var(--divider);
   }
   .coverage-card:hover {
@@ -383,80 +413,80 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
   .coverage-text {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0.5rem;
   }
   .coverage-title {
-    font-size: 22px;
+    font-size: 1.375rem;
     line-height: 1.35;
   }
   .coverage-arrow {
-    font-size: 26px;
+    font-size: 1.625rem;
   }
   .others {
-    margin-top: 88px;
+    margin-top: 5.5rem;
     display: flex;
     flex-wrap: wrap;
     border-top: 1px solid var(--divider);
   }
   .others a {
-    flex: 1 1 260px;
+    flex: 1 1 16.25rem;
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    gap: 16px;
-    padding: 28px 24px 24px 0;
+    gap: 1rem;
+    padding: 1.75rem 1.5rem 1.5rem 0;
   }
   .others a + a {
-    padding: 28px 0 24px 24px;
+    padding: 1.75rem 0 1.5rem 1.5rem;
     border-left: 1px solid var(--divider);
   }
   .other-text {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 0.625rem;
   }
   .other-package {
     font-family: var(--font-mono);
-    font-size: 14px;
+    font-size: 0.875rem;
   }
   .other-mark {
     display: flex;
     align-items: baseline;
-    gap: 14px;
+    gap: 0.875rem;
   }
   .other-mark .num {
     font-weight: 300;
-    font-size: 34px;
+    font-size: 2.125rem;
     line-height: 1;
     letter-spacing: 0.06em;
   }
   .other-mark .jp {
-    font-size: 24px;
+    font-size: 1.5rem;
   }
 
   /* Правая колонка */
   .toc {
-    flex: 1 1 200px;
-    max-width: 240px;
-    padding: 76px 40px 48px 0;
+    flex: 1 1 12.5rem;
+    max-width: 15rem;
+    padding: 4.75rem 2.5rem 3rem 0;
   }
   .toc-inner {
     position: sticky;
-    top: 32px;
+    top: 2rem;
   }
   .toc ul {
     list-style: none;
-    margin: 16px 0 0;
+    margin: 1rem 0 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    font-size: 16px;
+    font-size: 1rem;
   }
   .toc a {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 7px 0;
+    gap: 0.75rem;
+    padding: 0.4375rem 0;
     color: var(--secondary);
   }
   .dash {
@@ -469,7 +499,7 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
     color: var(--ink);
   }
   .toc a[aria-current='location'] .dash {
-    width: 20px;
+    width: 1.25rem;
   }
 
   @media (max-width: 1100px) {
@@ -482,23 +512,23 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
       max-width: none;
       border-right: 0;
       border-bottom: 1px solid var(--divider);
-      padding: 32px var(--page-gutter);
+      padding: 2rem var(--page-gutter);
     }
     .side-nav {
       display: none;
     }
     .main {
-      padding: 40px var(--page-gutter) 72px;
+      padding: 2.5rem var(--page-gutter) 4.5rem;
     }
     h1 {
-      font-size: 32px;
+      font-size: 2rem;
     }
     .description {
-      font-size: 21px;
+      font-size: 1.3125rem;
     }
     .others a,
     .others a + a {
-      padding: 24px 0;
+      padding: 1.5rem 0;
       border-left: 0;
     }
     .others a + a {

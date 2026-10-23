@@ -115,29 +115,31 @@ const actions = (lang: Lang): Action[] =>
 
   .error-page {
     position: relative;
-    min-height: max(100vh, 760px);
+    min-height: max(100vh, 47.5rem);
     overflow: hidden;
   }
   .brand {
     position: absolute;
-    top: 34px;
+    top: 2.125rem;
     left: var(--page-gutter);
   }
   .logo {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 1.125rem;
   }
   .logo img {
     display: block;
+    width: 2.625rem;
+    height: 2.625rem;
   }
   .logo span {
-    font-size: 23px;
+    font-size: 1.4375rem;
     letter-spacing: 0.44em;
   }
   .lang-switch {
     position: absolute;
-    top: 34px;
+    top: 2.125rem;
     right: var(--page-gutter);
     height: var(--tap-min);
     display: flex;
@@ -148,7 +150,7 @@ const actions = (lang: Lang): Action[] =>
   }
   .lang-switch button {
     height: var(--tap-min);
-    padding: 0 8px;
+    padding: 0 0.5rem;
     background: transparent;
     border: 0;
     font: inherit;
@@ -165,10 +167,10 @@ const actions = (lang: Lang): Action[] =>
 
   .content {
     position: absolute;
-    left: 88px;
-    top: 190px;
-    width: 760px;
-    max-width: calc(100% - 88px - var(--page-gutter));
+    left: 5.5rem;
+    top: 11.875rem;
+    width: 47.5rem;
+    max-width: calc(100% - 5.5rem - var(--page-gutter));
     display: flex;
     flex-direction: column;
   }
@@ -177,37 +179,37 @@ const actions = (lang: Lang): Action[] =>
     letter-spacing: 0.22em;
   }
   .code {
-    margin-top: 8px;
+    margin-top: 0.5rem;
     font-weight: 300;
-    font-size: 260px;
+    font-size: 16.25rem;
     line-height: 0.9;
     letter-spacing: 0.02em;
   }
   h1 {
-    margin: 28px 0 0;
+    margin: 1.75rem 0 0;
     font-weight: 400;
-    font-size: 44px;
+    font-size: 2.75rem;
     line-height: 1.15;
   }
   .body {
-    margin: 18px 0 0;
-    max-width: 540px;
-    font-size: 20px;
+    margin: 1.125rem 0 0;
+    max-width: 33.75rem;
+    font-size: 1.25rem;
     line-height: 1.55;
     color: var(--secondary);
   }
   .actions {
-    margin-top: 40px;
+    margin-top: 2.5rem;
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 0.75rem;
   }
   .go {
-    height: 48px;
+    height: 3rem;
     display: inline-flex;
     align-items: center;
-    gap: 14px;
-    padding: 0 20px;
+    gap: 0.875rem;
+    padding: 0 1.25rem;
     background: transparent;
     border: 1px solid var(--divider);
     color: var(--body-soft);
@@ -230,7 +232,7 @@ const actions = (lang: Lang): Action[] =>
     top: var(--panels-top);
     bottom: 0;
     right: var(--panels-right);
-    width: 300px;
+    width: 18.75rem;
     border-left: 1px solid var(--divider);
     border-right: 1px solid var(--divider);
     background: var(--error-panel);
@@ -238,26 +240,26 @@ const actions = (lang: Lang): Action[] =>
   .panel-title {
     position: absolute;
     top: 0;
-    right: 28px;
+    right: 1.75rem;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 22px;
+    gap: 1.375rem;
   }
   .panel-title .jp {
     writing-mode: vertical-rl;
-    font-size: 120px;
+    font-size: 7.5rem;
   }
   .panel-label {
     writing-mode: vertical-rl;
-    font-size: 13px;
+    font-size: 0.8125rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
   }
   .panel-meta {
     position: absolute;
-    left: 28px;
-    bottom: 40px;
+    left: 1.75rem;
+    bottom: 2.5rem;
     font-family: var(--font-mono);
     font-size: var(--meta-size);
     letter-spacing: var(--meta-tracking);
@@ -275,35 +277,35 @@ const actions = (lang: Lang): Action[] =>
       min-height: 100vh;
     }
     .brand {
-      top: 18px;
+      top: 1.125rem;
     }
     .logo {
-      gap: 14px;
+      gap: 0.875rem;
     }
     .logo img {
-      width: 36px;
-      height: 36px;
+      width: 2.25rem;
+      height: 2.25rem;
     }
     .logo span {
-      font-size: 20px;
+      font-size: 1.25rem;
     }
     .lang-switch {
-      top: 18px;
-      right: 12px;
+      top: 1.125rem;
+      right: 0.75rem;
     }
     .content {
       left: var(--page-gutter);
-      top: 120px;
+      top: 7.5rem;
       max-width: calc(100% - 2 * var(--page-gutter));
     }
     .code {
-      font-size: 140px;
+      font-size: 8.75rem;
     }
     h1 {
-      font-size: 32px;
+      font-size: 2rem;
     }
     .body {
-      font-size: 18px;
+      font-size: 1.125rem;
     }
   }
 </style>
