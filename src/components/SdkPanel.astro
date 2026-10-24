@@ -20,10 +20,20 @@ const route = `/${lang}/docs/${sdk.package}/`;
 const meta = `${sdk.license} · PYTHON ${sdk.python}`;
 const githubLabel = `${sdk.package} ${t(lang, 'nav.onGithub')}`;
 const id = `sdk-${sdk.package}`;
+const video = sdk.video && `/media/${sdk.video}`;
 ---
 
 <!-- Десктоп: панель целиком — ссылка на документацию, GitHub — соседняя ссылка. -->
 <div class="panel" data-rise style={order}>
+  <!-- Видео — только по наведению: источники ставит скрипт ниже, до этого ничего не грузится. -->
+  {
+    video && (
+      <div class="media" aria-hidden="true">
+        <img class="media-poster" src={`${video}-poster.webp`} alt="" loading="lazy" decoding="async" />
+        <video class="media-video" data-src={video} muted loop playsinline preload="none" disablepictureinpicture></video>
+      </div>
+    )
+  }
   <a class="panel-link" href={route} aria-label={`${sdk.kana} — ${sdk.label[lang]}: ${sdk.package}, ${t(lang, 'nav.docs').toLowerCase()}`}></a>
 
   <div class="title" aria-hidden="true">
@@ -66,6 +76,14 @@ const id = `sdk-${sdk.package}`;
   <div class="acc-body" id={id} inert>
     <div class="acc-inner">
     <div class="acc-content">
+    {
+      video && (
+        <div class="media acc-media" aria-hidden="true">
+          <img class="media-poster" src={`${video}-poster.webp`} alt="" loading="lazy" decoding="async" />
+          <video class="media-video" data-src={video} muted loop playsinline preload="none" disablepictureinpicture></video>
+        </div>
+      )
+    }
     <div class="meta">{sdk.platform}</div>
     <p class="description">{sdk.description[lang]}</p>
     <div class="facts"><span>/docs/{sdk.package}/</span><span>{meta}</span></div>
@@ -129,9 +147,10 @@ const id = `sdk-${sdk.package}`;
     position: absolute;
     left: 2.25rem;
     top: 16.25rem;
-    /* Ширина — от итоговой ширины раскрытой панели (index.astro: min(33vw, 640px)), а не от текущей:
-       пока панель расширяется, текст не переверстывается. Справа — колонка каны. */
-    width: min(20rem, calc(min(33vw, 640px) - 9.5rem));
+    /* Ширина — от итоговой ширины раскрытой панели (index.astro: всё, кроме колонок каны
+       соседей; 100cqw — ширина ряда панелей), а не от текущей: пока панель расширяется,
+       текст не переверстывается. Справа — своя колонка каны. */
+    width: min(20rem, calc(100cqw - var(--panel-closed) * (var(--panel-count) - 1) - 9.5rem));
     z-index: 2;
     pointer-events: none;
     opacity: 0;
@@ -198,6 +217,51 @@ const id = `sdk-${sdk.package}`;
   .panel:hover .details :global(.gh-btn),
   .panel:focus-within .details :global(.gh-btn) {
     pointer-events: auto;
+  }
+
+  /* Фоновое видео (#51): ч/б и приглушённое, под описанием уходит в чёрный.
+     Проявляется медленно и только после того, как панель раскрылась; гаснет быстрее.
+     Сначала постер, кадры видео — поверх него, когда видео действительно пошло. */
+  .media {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--video-out) var(--ease);
+  }
+  .panel:is(:hover, :focus-within) .media {
+    opacity: 1;
+    transition: opacity var(--video-in) var(--ease) var(--panel-duration);
+  }
+  .media-poster,
+  .media-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(1) brightness(0.55) contrast(1.05);
+  }
+  .media-video {
+    opacity: 0;
+    transition: opacity var(--video-in) var(--ease);
+  }
+  .media-video.is-ready {
+    opacity: 1;
+  }
+  /* Сверху — немного тени под каной, ниже — плотнее к описанию и в чёрный у низа. */
+  .media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--ground) 40%, transparent) 0%,
+      transparent 18%,
+      color-mix(in srgb, var(--ground) 55%, transparent) 32%,
+      color-mix(in srgb, var(--ground) 75%, transparent) 70%,
+      var(--ground) 100%
+    );
   }
 
   .accordion {
@@ -302,8 +366,26 @@ const id = `sdk-${sdk.package}`;
       overflow: hidden;
     }
     .acc-content {
+      position: relative;
+      isolation: isolate;
       padding: 2.25rem 1.25rem 2rem;
       border-top: 1px solid var(--divider);
+    }
+    .acc-content > :not(.media) {
+      position: relative;
+    }
+    /* Видео (#52) — фон раскрытого аккордеона, после того как он раскрылся. */
+    .accordion.is-open .acc-media {
+      opacity: 1;
+      transition: opacity var(--video-in) var(--ease) var(--expand-duration);
+    }
+    .acc-media::after {
+      background: linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--ground) 40%, transparent) 0%,
+        color-mix(in srgb, var(--ground) 85%, transparent) 45%,
+        var(--ground) 100%
+      );
     }
     .acc-body .description {
       margin-top: 1rem;
@@ -332,3 +414,51 @@ const id = `sdk-${sdk.package}`;
     }
   }
 </style>
+
+<script>
+  // Видео в панелях (#51, #52): источники ставятся только при первом раскрытии —
+  // до этого ни байта видео. При reduced motion и Save-Data — только постер.
+  const calm = matchMedia('(prefers-reduced-motion: reduce)');
+  const saveData = () => (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+
+  const play = (video: HTMLVideoElement) => {
+    if (calm.matches || saveData()) return;
+    if (!video.querySelector('source')) {
+      for (const type of ['webm', 'mp4']) {
+        const source = document.createElement('source');
+        source.src = video.dataset.src + '.' + type;
+        source.type = 'video/' + type;
+        video.append(source);
+      }
+      video.load();
+    }
+    video.play().catch(() => {});
+  };
+
+  for (const video of document.querySelectorAll<HTMLVideoElement>('.media-video')) {
+    // Кадры проявляются поверх постера, только когда видео действительно пошло.
+    video.addEventListener('playing', () => video.classList.add('is-ready'), { once: true });
+  }
+
+  // Десктоп: наведение или фокус внутри панели.
+  for (const panel of document.querySelectorAll<HTMLElement>('.panel')) {
+    const video = panel.querySelector<HTMLVideoElement>('.media-video');
+    if (!video) continue;
+    const sync = () => (panel.matches(':hover, :focus-within') ? play(video) : video.pause());
+    panel.addEventListener('pointerenter', () => play(video));
+    panel.addEventListener('pointerleave', sync);
+    panel.addEventListener('focusin', () => play(video));
+    panel.addEventListener('focusout', () => requestAnimationFrame(sync));
+  }
+
+  // Мобильный: играет, только пока аккордеон открыт (кнопку переключает index.astro).
+  for (const accordion of document.querySelectorAll<HTMLElement>('.accordion')) {
+    const video = accordion.querySelector<HTMLVideoElement>('.media-video');
+    const button = accordion.querySelector('button');
+    if (!video || !button) continue;
+    new MutationObserver(() => (button.getAttribute('aria-expanded') === 'true' ? play(video) : video.pause())).observe(button, {
+      attributes: true,
+      attributeFilter: ['aria-expanded'],
+    });
+  }
+</script>

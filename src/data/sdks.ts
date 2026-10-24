@@ -29,6 +29,9 @@ export type Sdk = {
   apiNotes?: string;
   /** Папка примеров от корня репозитория; общую папку делят по подстроке в имени файла. */
   examples?: { dir: string; only?: string; skip?: string };
+  /** Фоновое видео раскрытой панели на главной: имя файлов в public/media/
+   *  (<name>.webm, <name>.mp4, <name>-poster.webp — scripts/prepare-video.mjs). */
+  video?: string;
 };
 
 export const sdks: readonly Sdk[] = [
@@ -58,6 +61,7 @@ export const sdks: readonly Sdk[] = [
     ],
     coverage: { api: 'AniLibria API v1', endpoints: 'docs/endpoints.md', spec: 'spec/openapi.json', source: 'src/aniliberty' },
     examples: { dir: 'examples' },
+    video: 'anime',
   },
   {
     number: 'II',
