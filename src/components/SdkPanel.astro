@@ -1,6 +1,7 @@
 ---
 import CoverWall from './CoverWall.astro';
 import GithubButton from './GithubButton.astro';
+import ReadingLine from './ReadingLine.astro';
 import type { Sdk } from '../data/sdks';
 import { t, type Lang } from '../i18n';
 
@@ -26,7 +27,7 @@ const video = sdk.video && `/media/${sdk.video}`;
 
 <!-- Десктоп: панель целиком — ссылка на документацию, GitHub — соседняя ссылка. -->
 <div class="panel" data-rise style={order}>
-  <!-- Видео или стена обложек — только по наведению: до этого ничего не грузится
+  <!-- Видео, стена обложек или строка чтения — только по наведению: до этого ничего не грузится
        (источники видео ставит скрипт ниже, обложки — CoverWall.astro). -->
   {
     video && (
@@ -40,6 +41,13 @@ const video = sdk.video && `/media/${sdk.video}`;
     sdk.covers && (
       <div class="media" aria-hidden="true">
         <CoverWall name={sdk.covers} />
+      </div>
+    )
+  }
+  {
+    sdk.phrases && (
+      <div class="media" aria-hidden="true">
+        <ReadingLine name={sdk.phrases} />
       </div>
     )
   }
@@ -100,6 +108,7 @@ const video = sdk.video && `/media/${sdk.video}`;
         </div>
       )
     }
+    {/* Строки чтения на телефоне нет: описание занимает весь аккордеон, фразы шли бы под текстом. */}
     <div class="meta">{sdk.platform}</div>
     <p class="description">{sdk.description[lang]}</p>
     <div class="facts"><span>/docs/{sdk.package}/</span><span>{meta}</span></div>

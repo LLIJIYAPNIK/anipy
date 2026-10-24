@@ -29,6 +29,7 @@
 - Раскрытая панель на главной забирает всё место, остальные сжимаются до колонки каны (`--panel-closed`).
 - Фоновое видео панели — поле `video` в `sdks.ts`, файлы в `public/media/` готовит `scripts/prepare-video.mjs` (MP4 + WebM без звука, постер WebP). Видео грузится только при раскрытии панели, ч/б и приглушение — CSS-фильтром; при reduced motion и Save-Data — только постер.
 - Стена обложек вместо видео — поле `covers` в `sdks.ts` (`components/CoverWall.astro`): колонки обложек бесконечно едут по вертикали, соседние — навстречу и со сдвигом. Обложки в `public/media/<имя>/` готовит `scripts/prepare-covers.py` через mangalib-python-sdk (популярная манга без 18+, WebP 240×336, `sources.json` — откуда каждая). Грузятся только при раскрытии, при Save-Data — нет; при reduced motion стоят на месте.
+- Строка чтения вместо видео — поле `phrases` в `sdks.ts` (`components/ReadingLine.astro`): фразы из ранобэ едут вверх, неподвижная маска оставляет яркой полосу над описанием, к подробностям лента гаснет. Только CSS, только десктоп: в аккордеоне фразы шли бы под текстом. Фразы в `src/data/<имя>.json` готовит `scripts/prepare-phrases.py` через ranobelib-python-sdk — по списку «том, глава, абзац», дословно; отбор ручной (High School DxD — 16+).
 
 ## Масштаб и движение
 
@@ -72,6 +73,7 @@ public/logo.png         # знак ア в энсо из макета; на «О 
 scripts/sync-sdk.mjs    # клонирует репозитории из sdks.ts в .sdk/
 scripts/prepare-video.mjs # видео для панели: node scripts/prepare-video.mjs <исходник> <имя> [--poster <сек>]; ffmpeg из PATH или $FFMPEG
 scripts/prepare-covers.py # обложки для стены: uv run scripts/prepare-covers.py [<имя>] [--count 50]
+scripts/prepare-phrases.py # фразы для строки чтения: uv run scripts/prepare-phrases.py
 public/media/           # видео, постеры и обложки панелей
 .sdk/                   # клоны репозиториев SDK для сборки, в git не попадает
 ```
