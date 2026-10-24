@@ -51,6 +51,10 @@
   --draw-duration: 1400ms;
   --expand-duration: 420ms;
   --page-duration: 380ms;
+  /* Видео в раскрытой панели: проявляется медленно, после того как панель раскрылась,
+     и гаснет быстрее — чтобы не пугать резкой сменой картинки. */
+  --video-in: 1400ms;
+  --video-out: 420ms;
   /* Доля прокрутки, на которую вертикальная кана отстаёт от текста. */
   --parallax: 0.18;
 }
@@ -78,6 +82,8 @@
     --draw-duration: 0ms;
     --expand-duration: 0ms;
     --page-duration: 0ms;
+    --video-in: 0ms;
+    --video-out: 0ms;
     --parallax: 0;
   }
 }
