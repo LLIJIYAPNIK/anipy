@@ -42,7 +42,7 @@ const ownerName = owner.split('/').pop();
       <span class="meta">{t(lang, 'site.footer')}</span>
     </footer>
 
-    <nav class="panels" aria-label={t(lang, 'nav.collection')}>
+    <nav class="panels" aria-label={t(lang, 'nav.collection')} style={`--panel-count: ${sdks.length}`}>
       {sdks.map((sdk, i) => <SdkPanel sdk={sdk} lang={lang} index={i} />)}
     </nav>
   </div>
@@ -161,11 +161,17 @@ const ownerName = owner.split('/').pop();
     display: flex;
     border-right: 1px solid var(--divider);
   }
-  /* Наведение/фокус: раскрытая панель — треть окна, но не шире 640px; соседние делят остаток.
-     :global целиком — Astro не разворачивает :global() внутри :has(). */
-  :global(.panels .panel:is(:hover, :focus-within)) {
+  /* Наведение/фокус: нераскрытые панели сжимаются до колонки каны, раскрытая забирает
+     остаток — простор для видео. Ширина колонки и число панелей нужны и SdkPanel.astro:
+     от них считается ширина подробностей. :global целиком — Astro не разворачивает
+     :global() внутри :has(). */
+  .panels {
+    container-type: inline-size;
+    --panel-closed: calc(var(--jp-size) + 2.5rem);
+  }
+  :global(.panels:has(.panel:is(:hover, :focus-within)) .panel:not(:hover, :focus-within)) {
     flex-grow: 0;
-    flex-basis: min(33vw, 640px);
+    flex-basis: var(--panel-closed);
   }
 
   /* Планшетная ширина: панелям не хватает места справа от вводного блока —

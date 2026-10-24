@@ -129,9 +129,10 @@ const id = `sdk-${sdk.package}`;
     position: absolute;
     left: 2.25rem;
     top: 16.25rem;
-    /* Ширина — от итоговой ширины раскрытой панели (index.astro: min(33vw, 640px)), а не от текущей:
-       пока панель расширяется, текст не переверстывается. Справа — колонка каны. */
-    width: min(20rem, calc(min(33vw, 640px) - 9.5rem));
+    /* Ширина — от итоговой ширины раскрытой панели (index.astro: всё, кроме колонок каны
+       соседей; 100cqw — ширина ряда панелей), а не от текущей: пока панель расширяется,
+       текст не переверстывается. Справа — своя колонка каны. */
+    width: min(20rem, calc(100cqw - var(--panel-closed) * (var(--panel-count) - 1) - 9.5rem));
     z-index: 2;
     pointer-events: none;
     opacity: 0;
