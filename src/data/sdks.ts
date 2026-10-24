@@ -32,6 +32,8 @@ export type Sdk = {
   /** Фоновое видео раскрытой панели на главной: имя файлов в public/media/
    *  (<name>.webm, <name>.mp4, <name>-poster.webp — scripts/prepare-video.mjs). */
   video?: string;
+  /** Стена обложек вместо видео: папка в public/media/ (scripts/prepare-covers.py). */
+  covers?: string;
 };
 
 export const sdks: readonly Sdk[] = [
@@ -96,6 +98,7 @@ export const sdks: readonly Sdk[] = [
     repo: { url: 'https://github.com/LLIJIYAPNIK/libsocial-sdk.git', dir: 'libsocial-sdk', path: 'packages/mangalib' },
     apiNotes: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/blob/main/docs/api-notes.md',
     examples: { dir: 'examples', only: 'mangalib' },
+    covers: 'manga',
   },
 ];
 
