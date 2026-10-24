@@ -34,6 +34,8 @@ export type Sdk = {
   video?: string;
   /** Стена обложек вместо видео: папка в public/media/ (scripts/prepare-covers.py). */
   covers?: string;
+  /** Строка чтения вместо видео: файл фраз в src/data/ без расширения (scripts/prepare-phrases.py). */
+  phrases?: string;
 };
 
 export const sdks: readonly Sdk[] = [
@@ -81,6 +83,7 @@ export const sdks: readonly Sdk[] = [
     repo: { url: 'https://github.com/LLIJIYAPNIK/libsocial-sdk.git', dir: 'libsocial-sdk', path: 'packages/ranobelib' },
     apiNotes: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/blob/main/docs/api-notes.md',
     examples: { dir: 'examples', skip: 'mangalib' },
+    phrases: 'ranobe-phrases',
   },
   {
     number: 'III',

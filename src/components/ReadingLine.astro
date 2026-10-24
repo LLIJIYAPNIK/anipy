@@ -1,0 +1,69 @@
+---
+// Строка чтения — фон раскрытой панели «Ранобэ» на десктопе: фразы из ранобэ медленно едут
+// вверх, как текст под глазами читателя. Неподвижная маска поверх ленты: строка в полосе
+// чтения яркая, остальные приглушены. Только CSS, текст — в разметке, грузить нечего.
+// Фразы готовит scripts/prepare-phrases.py: src/data/<name>.json.
+import { readFileSync } from 'node:fs';
+
+interface Props {
+  /** Файл фраз в src/data/ без расширения. */
+  name: string;
+}
+
+const { name } = Astro.props;
+const phrases: { text: string }[] = JSON.parse(readFileSync(`src/data/${name}.json`, 'utf-8'));
+---
+
+<div class="reading">
+  {/* Два одинаковых списка подряд: сдвиг на половину — и лента замыкается без шва. */}
+  <div class="track">
+    {[...phrases, ...phrases].map((phrase) => <p>{phrase.text}</p>)}
+  </div>
+</div>
+
+<style>
+  .reading {
+    position: absolute;
+    inset: 0 auto 0 2.25rem;
+    /* Ширина — от раскрытой панели, как у подробностей (SdkPanel.astro): пока панель
+       расширяется, строки не переверстываются. Справа — колонка каны. */
+    width: calc(100cqw - var(--panel-closed) * var(--panel-count) - 2.25rem);
+    overflow: hidden;
+    /* Полоса чтения — над описанием, где панель свободна; вокруг неё строки приглушены,
+       а к подробностям (top: 16.25rem в SdkPanel.astro) лента гаснет: текст не под текстом. */
+    --dim: color-mix(in srgb, var(--ground) 18%, transparent);
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      var(--dim) 2.5rem,
+      var(--dim) 7rem,
+      var(--ground) 9rem,
+      var(--ground) 11.5rem,
+      var(--dim) 13.5rem,
+      transparent 15.75rem
+    );
+  }
+  .track {
+    animation: reading-loop var(--reading-loop) linear infinite;
+    animation-play-state: paused;
+  }
+  /* Едет, только пока панель раскрыта. */
+  :global(.panel:is(:hover, :focus-within)) .track {
+    animation-play-state: running;
+  }
+  p {
+    margin: 0;
+    /* Отступ снизу, а не зазор: у половины ленты ровно та же высота, шва нет. */
+    padding-bottom: 1.5rem;
+    font-size: 1.1875rem;
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--body-soft);
+  }
+
+  @keyframes reading-loop {
+    to {
+      transform: translateY(-50%);
+    }
+  }
+</style>
