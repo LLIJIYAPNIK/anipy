@@ -1,4 +1,5 @@
 ---
+import CoverWall from './CoverWall.astro';
 import GithubButton from './GithubButton.astro';
 import type { Sdk } from '../data/sdks';
 import { t, type Lang } from '../i18n';
@@ -25,12 +26,20 @@ const video = sdk.video && `/media/${sdk.video}`;
 
 <!-- Десктоп: панель целиком — ссылка на документацию, GitHub — соседняя ссылка. -->
 <div class="panel" data-rise style={order}>
-  <!-- Видео — только по наведению: источники ставит скрипт ниже, до этого ничего не грузится. -->
+  <!-- Видео или стена обложек — только по наведению: до этого ничего не грузится
+       (источники видео ставит скрипт ниже, обложки — CoverWall.astro). -->
   {
     video && (
       <div class="media" aria-hidden="true">
         <img class="media-poster" src={`${video}-poster.webp`} alt="" loading="lazy" decoding="async" />
         <video class="media-video" data-src={video} muted loop playsinline preload="none" disablepictureinpicture></video>
+      </div>
+    )
+  }
+  {
+    sdk.covers && (
+      <div class="media" aria-hidden="true">
+        <CoverWall name={sdk.covers} />
       </div>
     )
   }
@@ -81,6 +90,13 @@ const video = sdk.video && `/media/${sdk.video}`;
         <div class="media acc-media" aria-hidden="true">
           <img class="media-poster" src={`${video}-poster.webp`} alt="" loading="lazy" decoding="async" />
           <video class="media-video" data-src={video} muted loop playsinline preload="none" disablepictureinpicture></video>
+        </div>
+      )
+    }
+    {
+      sdk.covers && (
+        <div class="media acc-media" aria-hidden="true">
+          <CoverWall name={sdk.covers} />
         </div>
       )
     }

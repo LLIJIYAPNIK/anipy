@@ -1,0 +1,106 @@
+---
+// Стена обложек — фон раскрытой панели вместо видео (#54): колонки обложек бесконечно
+// едут по вертикали, соседние — в разные стороны и со сдвигом, ч/б — CSS-фильтром.
+// Обложки готовит scripts/prepare-covers.py: public/media/<name>/1.webp … и sources.json.
+import { readFileSync } from 'node:fs';
+
+interface Props {
+  /** Папка в public/media/. */
+  name: string;
+}
+
+const { name } = Astro.props;
+const sources: { file: string }[] = JSON.parse(readFileSync(`public/media/${name}/sources.json`, 'utf-8'));
+
+const columnCount = 4;
+/** Сдвиг колонок вверх, в rem: колонки не вровень друг с другом. */
+const shifts = [0, 3.25, 1.25, 4.5];
+const columns = Array.from({ length: columnCount }, (_, column) =>
+  sources.filter((_, i) => i % columnCount === column).map((source) => `/media/${name}/${source.file}`),
+);
+---
+
+<div class="wall">
+  {
+    columns.map((files, column) => (
+      <div class="column" style={`--shift: ${shifts[column]}rem`}>
+        {/* Два одинаковых ряда подряд: сдвиг на половину — и лента замыкается без шва. */}
+        <div class="track">
+          {[...files, ...files].map((file) => (
+            <img data-src={file} alt="" decoding="async" />
+          ))}
+        </div>
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  .wall {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    gap: 0.75rem;
+    padding: 0 0.75rem;
+    overflow: hidden;
+    filter: grayscale(1) brightness(0.55) contrast(1.05);
+  }
+  .column {
+    flex: 1 1 0;
+    min-width: 0;
+    /* Колонки не вровень: каждая начинается со своего сдвига. */
+    margin-top: calc(-1 * var(--shift));
+  }
+  .track {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    animation: covers-loop var(--covers-loop) linear infinite;
+    animation-play-state: paused;
+  }
+  .column:nth-child(even) .track {
+    animation-direction: reverse;
+  }
+  /* Едут, только пока панель раскрыта (или открыт аккордеон на телефоне). */
+  :global(.panel:is(:hover, :focus-within)) .track,
+  :global(.accordion.is-open) .track {
+    animation-play-state: running;
+  }
+  img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 5 / 7;
+    object-fit: cover;
+    background: var(--code-bg);
+  }
+
+  /* Сдвиг на половину ленты (+ половину зазора) — ровно один ряд обложек. */
+  @keyframes covers-loop {
+    to {
+      transform: translateY(calc(-50% - 0.375rem));
+    }
+  }
+</style>
+
+<script>
+  // Обложки грузятся только при первом раскрытии, как видео аниме; при Save-Data — никогда.
+  const saveData = () => (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+
+  const load = (wall: Element) => {
+    if (saveData()) return;
+    for (const img of wall.querySelectorAll<HTMLImageElement>('img[data-src]')) {
+      img.src = img.dataset.src!;
+      img.removeAttribute('data-src');
+    }
+  };
+
+  for (const wall of document.querySelectorAll('.wall')) {
+    const panel = wall.closest('.panel');
+    if (panel) {
+      panel.addEventListener('pointerenter', () => load(wall), { once: true });
+      panel.addEventListener('focusin', () => load(wall), { once: true });
+    }
+    const button = wall.closest('.accordion')?.querySelector('button');
+    if (button) button.addEventListener('click', () => load(wall), { once: true });
+  }
+</script>

@@ -28,6 +28,7 @@
 - Ширина < 768px: аккордеон, кнопки с `aria-expanded`, зона нажатия не меньше 48px; 768–1100px — вводный блок над панелями.
 - Раскрытая панель на главной забирает всё место, остальные сжимаются до колонки каны (`--panel-closed`).
 - Фоновое видео панели — поле `video` в `sdks.ts`, файлы в `public/media/` готовит `scripts/prepare-video.mjs` (MP4 + WebM без звука, постер WebP). Видео грузится только при раскрытии панели, ч/б и приглушение — CSS-фильтром; при reduced motion и Save-Data — только постер.
+- Стена обложек вместо видео — поле `covers` в `sdks.ts` (`components/CoverWall.astro`): колонки обложек бесконечно едут по вертикали, соседние — навстречу и со сдвигом. Обложки в `public/media/<имя>/` готовит `scripts/prepare-covers.py` через mangalib-python-sdk (популярная манга без 18+, WebP 240×336, `sources.json` — откуда каждая). Грузятся только при раскрытии, при Save-Data — нет; при reduced motion стоят на месте.
 
 ## Масштаб и движение
 
@@ -70,7 +71,8 @@ src/
 public/logo.png         # знак ア в энсо из макета; на «О проекте» надпись под ним — текстом
 scripts/sync-sdk.mjs    # клонирует репозитории из sdks.ts в .sdk/
 scripts/prepare-video.mjs # видео для панели: node scripts/prepare-video.mjs <исходник> <имя> [--poster <сек>]; ffmpeg из PATH или $FFMPEG
-public/media/           # видео и постеры панелей
+scripts/prepare-covers.py # обложки для стены: uv run scripts/prepare-covers.py [<имя>] [--count 50]
+public/media/           # видео, постеры и обложки панелей
 .sdk/                   # клоны репозиториев SDK для сборки, в git не попадает
 ```
 
