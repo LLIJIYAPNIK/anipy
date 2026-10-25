@@ -130,7 +130,7 @@ const codeFigure = async (code: string, lang: string, labels: RenderOptions['lab
   return (
     '<figure class="code"><figcaption>' +
     `<span class="meta">${escapeText((lang || 'text').toUpperCase())}</span>` +
-    `<button class="copy meta" type="button" aria-label="${escapeAttr(labels.copyCode)}" data-copy="${escapeAttr(code)}" data-done="${escapeAttr(labels.copied.toUpperCase())}">` +
+    `<button class="copy meta" type="button" data-pagefind-ignore aria-label="${escapeAttr(labels.copyCode)}" data-copy="${escapeAttr(code)}" data-done="${escapeAttr(labels.copied.toUpperCase())}">` +
     `${copyIcon}<span aria-live="polite">${escapeText(labels.copy.toUpperCase())}</span></button>` +
     `</figcaption><pre><code>${body}</code></pre></figure>`
   );

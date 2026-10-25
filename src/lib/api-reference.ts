@@ -245,9 +245,16 @@ const renderObject = async (obj: ApiObject, level: number, ctx: ApiContext, pare
   const root = parentKind === undefined;
   const heading = root ? obj.heading !== false : true;
   const tag = `h${Math.min(level, 6)}`;
-  const parts: string[] = [`<section class="api api-${esc(obj.kind)}" id="${esc(obj.id)}">`];
+  // Якорь — на заголовке, если он есть: поиск (Pagefind) ведёт к разделам по заголовкам с id.
+  // У корня без заголовка (show_root_heading: false) — на самом объекте.
+  const anchor = ` id="${esc(obj.id)}"`;
+  const parts: string[] = [`<section class="api api-${esc(obj.kind)}"${heading ? '' : anchor}>`];
   if (heading) {
-    parts.push(`<${tag} class="api-head"><code class="api-name">${esc(root ? obj.id : obj.name)}</code><span class="api-chips">${chips(obj, parentKind, ctx)}</span></${tag}>`);
+    // Плашки — рядом с заголовком, а не в нём: иначе они попадают в название раздела в поиске.
+    parts.push(
+      `<div class="api-title"><${tag} class="api-head"${anchor}><code class="api-name">${esc(root ? obj.id : obj.name)}</code></${tag}>` +
+        `<span class="api-chips" data-pagefind-ignore>${chips(obj, parentKind, ctx)}</span></div>`,
+    );
     const sig = signature(obj, ctx);
     if (sig) parts.push(`<pre class="api-sig"><code>${sig}</code></pre>`);
     if (obj.kind === 'class' && showBases && obj.bases?.length) {
@@ -257,7 +264,7 @@ const renderObject = async (obj: ApiObject, level: number, ctx: ApiContext, pare
   parts.push(`<div class="api-doc">${await sections(obj, ctx)}`);
   if (heading && obj.source) {
     const { file, start, end } = obj.source;
-    parts.push(`<a class="api-source meta" href="${esc(ctx.sourceUrl(file, start, end))}" target="_blank" rel="noopener noreferrer">${esc(ctx.labels.source)} ↗</a>`);
+    parts.push(`<a class="api-source meta" data-pagefind-ignore href="${esc(ctx.sourceUrl(file, start, end))}" target="_blank" rel="noopener noreferrer">${esc(ctx.labels.source)} ↗</a>`);
   }
   parts.push('</div>');
   if (obj.members?.length) {

@@ -34,7 +34,7 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
 ---
 
 <DocsLayout lang={lang} set={sdk} title={`${sdk.package} — ANIPY`} description={sdk.description[lang]} toc={toc}>
-  <article>
+  <article data-pagefind-body data-pagefind-filter={`sdk:${sdk.package}`}>
     <div id="overview" class="meta overline" data-rise style="--i: 0">{sdk.number} — {sdk.label[lang].toUpperCase()} · {sdk.platform.toUpperCase()}</div>
     <h1 data-rise style="--i: 1">{sdk.package}</h1>
     <p class="description" data-rise style="--i: 2">{sdk.description[lang]}</p>
@@ -113,7 +113,7 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
       )
     }
 
-    <nav class="others" data-reveal aria-label={t(lang, 'docs.otherSdks')}>
+    <nav class="others" data-reveal aria-label={t(lang, 'docs.otherSdks')} data-pagefind-ignore>
       {
         others.map((other, i) => (
           <a href={`/${lang}/docs/${other.package}/`}>
