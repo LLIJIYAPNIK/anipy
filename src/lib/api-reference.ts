@@ -142,7 +142,8 @@ const paramParts = (params: Param[], ctx: ApiContext): Part[] => {
     if (prefix === '*') star = true;
     const annotation = p.annotation ? { html: `: ${html(p.annotation, ctx)}`, plain: `: ${plain(p.annotation)}` } : { html: '', plain: '' };
     const eq = p.annotation ? ' = ' : '=';
-    const def = p.default !== null ? { html: `${eq}${esc(p.default)}`, plain: `${eq}${p.default}` } : { html: '', plain: '' };
+    // У *args/**kwargs griffe отдаёт значение по умолчанию () / {} — в исходнике его нет.
+    const def = p.default !== null && !prefix ? { html: `${eq}${esc(p.default)}`, plain: `${eq}${p.default}` } : { html: '', plain: '' };
     parts.push({
       html: `${prefix}<span class="api-param">${esc(p.name)}</span>${annotation.html}${def.html}`,
       plain: `${prefix}${p.name}${annotation.plain}${def.plain}`,
