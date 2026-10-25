@@ -60,6 +60,7 @@ src/
   lib/markdown.ts       # markdown документации → HTML в стиле сайта (admonition, snippets, якоря как у mkdocs)
   lib/api-reference.ts  # справочник API: директивы `::: путь` → объекты из .sdk/api, ссылки autorefs и аннотаций
   lib/changelog.ts      # разбирает CHANGELOG.md (Keep a Changelog от git-cliff)
+  lib/versions.ts       # последняя версия SDK: PyPI при сборке, без сети — CHANGELOG.md
   lib/coverage.ts       # покрытие API: endpoints.md + openapi.json (lib/openapi.ts) + методы SDK из данных griffe (lib/api-reference.ts)
   data/coverage-groups.ts # тег операции → группа таблицы покрытия, подписи групп из макета
   lib/examples.ts       # примеры из examples/ репозиториев SDK; пометка «аккаунт» — по чтению переменных окружения
@@ -73,6 +74,7 @@ src/
   components/
   pages/[lang]/         # /en/…, /ru/…: главная, docs/<package>/ (обзор) и docs/<package|id общей документации>/<страница>/, examples/, changelog/, coverage/ (#<package> — вкладка), about/
   pages/data/coverage/  # статический JSON подробностей операций для таблицы покрытия
+  pages/changelog.xml.ts # Atom-лента релизов всех SDK из CHANGELOG.md, одна на оба языка
   pages/404.astro, 500.astro # одна страница на весь сайт, оба языка (components/ErrorPage.astro); 500.html отдаёт сервер
 public/logo.png         # знак ア в энсо из макета; на «О проекте» надпись под ним — текстом
 scripts/sync-sdk.mjs    # клонирует репозитории из sdks.ts в .sdk/ и запускает api-reference.py
@@ -89,6 +91,7 @@ public/robots.txt       # всё открыто, кроме /data/; ссылка
 
 - Страницы документации — ровно `nav` из `mkdocs.yml` репозитория SDK (`lib/mkdocs.ts`); `docsNav` в `sdks.ts` — какие разделы `nav` относятся к SDK, когда репозиторий документирует несколько пакетов. Документация, общая для нескольких SDK одного репозитория (ядро `libsocial-core`), — запись в `sharedDocs` (`sdks.ts`): свой адрес `/docs/<id>/…`, без знака SDK и вкладки; в меню SDK, чей `docsNav` называет её раздел, — ссылки на эти страницы, а не копии. `index.md`, `changelog.md`, `examples.md` заменяют свои страницы сайта (обзор, изменения, примеры). Текст не переводится и не правится — правки идут в репозиторий SDK; на русской версии над текстом — пометка об английском оригинале со ссылкой на исходный файл.
 - Справочник API — директивы mkdocstrings из страниц SDK. Данные извлекает `scripts/api-reference.py` тем же griffe, что у mkdocstrings, с опциями из `mkdocs.yml` и самой директивы (`members`, `inherited_members`, `show_root_heading`, `show_bases`, `merge_init_into_class`, порядок членов); сайт только рисует. Объект, которого нет, роняет sync и сборку — как `mkdocs build --strict`. Версия griffe — в шапке скрипта, держать как у SDK.
+- Версия SDK на панелях главной и в обзоре документации — `latestVersion()` (`lib/versions.ts`): PyPI при сборке, при недоступности — первая секция CHANGELOG.md с предупреждением в логе сборки. Сайт пересобирается по `sdk-release`, поэтому версия свежая без ручных правок.
 - SEO (`layouts/Base.astro`): у каждой страницы `canonical`, пара `hreflang` ru/en с `x-default` на русскую, OG/Twitter-карточка; страницы ошибок — `noindex`. Карта сайта — `@astrojs/sitemap` (только `/ru/…` и `/en/…`). Картинка превью — `public/og/<ключ>.png` набора документации, иначе `anipy.png`; новый SDK — перезапустить `scripts/prepare-og.mjs` (без русского и английского текста — одна картинка на оба языка).
 - Поиск — Pagefind: `npm run build` после `astro build` строит индекс в `dist/pagefind/` (свой на каждый язык). Индексируется только `<article data-pagefind-body>` страниц документации с фильтром `data-pagefind-filter="sdk:<ключ>"`; служебное внутри статьи (кнопки, «Назад/Далее», плашки API) — `data-pagefind-ignore`. В `npm run dev` индекса нет — поиск проверять через `npm run build` и `npm run preview`.
 - Якорь объекта API — на его заголовке (Pagefind ссылается на разделы по заголовкам с id), у корня без заголовка — на `<section>`.
