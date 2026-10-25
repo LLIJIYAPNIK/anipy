@@ -85,3 +85,24 @@ button:focus-visible {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* Подсветка кода (lib/highlight.ts) в покрытии API и документации — только оттенки из tokens.css: роль токена — яркость и курсив. */
+.hl-ink {
+  color: var(--ink);
+}
+.hl-soft {
+  color: var(--body-soft);
+}
+.hl-ter {
+  color: var(--tertiary);
+}
+.hl-sec {
+  color: var(--secondary);
+}
+.hl-mut {
+  color: var(--muted);
+}
+.hl-i {
+  font-style: italic;
+}
+
