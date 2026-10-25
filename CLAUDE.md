@@ -56,6 +56,8 @@ src/
   content.config.ts     # коллекции из репозиториев SDK со схемами
   styles/tokens.css     # все цвета, шрифты, тайминги Spec V1 — только здесь
   lib/readme.ts         # достаёт из README SDK разделы Installation и Quickstart
+  lib/mkdocs.ts         # nav из mkdocs.yml репозитория SDK → меню и страницы документации
+  lib/markdown.ts       # markdown документации → HTML в стиле сайта (admonition, snippets, якоря как у mkdocs)
   lib/changelog.ts      # разбирает CHANGELOG.md (Keep a Changelog от git-cliff)
   lib/coverage.ts       # покрытие API: endpoints.md + openapi.json (lib/openapi.ts) + docstring-и (lib/pydoc.ts)
   data/coverage-groups.ts # тег операции → группа таблицы покрытия, подписи групп из макета
@@ -65,8 +67,9 @@ src/
   scripts/tabs.ts       # вкладки по SDK на Changelog и Coverage
   lib/grayscale-theme.ts# тема подсветки кода; дублирует цвета tokens.css (Shiki красит инлайном)
   layouts/Base.astro    # <head>, шрифты; шапки — в компонентах страниц
+  components/DocsLayout.astro # каркас документации: шапка, меню страниц, «На этой странице»
   components/
-  pages/[lang]/         # /en/…, /ru/…: главная, docs/<package>/, examples/, changelog/, coverage/ (#<package> — вкладка), about/
+  pages/[lang]/         # /en/…, /ru/…: главная, docs/<package>/ (обзор) и docs/<package>/<страница>/, examples/, changelog/, coverage/ (#<package> — вкладка), about/
   pages/data/coverage/  # статический JSON подробностей операций для таблицы покрытия
   pages/404.astro, 500.astro # одна страница на весь сайт, оба языка (components/ErrorPage.astro); 500.html отдаёт сервер
 public/logo.png         # знак ア в энсо из макета; на «О проекте» надпись под ним — текстом
@@ -78,8 +81,10 @@ public/media/           # видео, постеры и обложки пане�
 .sdk/                   # клоны репозиториев SDK для сборки, в git не попадает
 ```
 
+- Страницы документации — ровно `nav` из `mkdocs.yml` репозитория SDK (`lib/mkdocs.ts`); `docsNav` в `sdks.ts` — какие разделы `nav` относятся к SDK, когда репозиторий документирует несколько пакетов. `index.md`, `changelog.md`, `examples.md` заменяют свои страницы сайта (обзор, изменения, примеры). Текст не переводится и не правится — правки идут в репозиторий SDK.
+- Ссылки в документации: на другие `.md` — на страницы сайта, якоря — те же, что у mkdocs (`slugify` в `lib/markdown.ts`); на прочие файлы репозитория — на GitHub.
 - Покрытие API есть у SDK с полем `coverage` в `sdks.ts`; у остальных вкладка показывает заглушку со ссылкой на `apiNotes`.
-- Контент SDK читается только из `.sdk/`: markdown — через коллекции, `openapi.json` и исходники Python — через `fs` в `lib/coverage.ts`. Схема коллекции падает, если в репозитории SDK пропало нужное поле: это правильно, обходить не надо.
+- Контент SDK читается только из `.sdk/`: README и CHANGELOG — через коллекции, страницы `docs/` — через `fs` в `lib/mkdocs.ts`, `openapi.json` и исходники Python — через `fs` в `lib/coverage.ts`. Схема коллекции падает, если в репозитории SDK пропало нужное поле: это правильно, обходить не надо.
 - Цвета и размеры в компонентах — только через переменные из `tokens.css`, без литералов.
 - Клоны в `.sdk/` на Windows приходят с CRLF: разбирая markdown, сначала нормализуй переводы строк.
 - Стили, задевающие разметку дочернего компонента через `:has()`, пиши как `:global(...)` целиком: Astro не разворачивает `:global()` внутри `:has()`.

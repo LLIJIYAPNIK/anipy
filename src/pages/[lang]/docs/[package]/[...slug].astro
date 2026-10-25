@@ -1,0 +1,294 @@
+---
+// Страница документации SDK из его репозитория (#63): файл из nav mkdocs.yml → HTML в стиле сайта.
+import { readFileSync } from 'node:fs';
+import DocsLayout from '../../../../components/DocsLayout.astro';
+import { sdks, repoRootFileUrl, type Sdk } from '../../../../data/sdks';
+import { docsNav, docsPages, docsRoot, docUrl, findDoc, repoRoot, type DocPage } from '../../../../lib/mkdocs';
+import { renderDoc } from '../../../../lib/markdown';
+import { langs, t, type Lang } from '../../../../i18n';
+
+export const getStaticPaths = () =>
+  langs.flatMap((lang) =>
+    sdks.flatMap((sdk) => docsPages(sdk).map((page) => ({ params: { lang, package: sdk.package, slug: page.slug }, props: { sdk, page } }))),
+  );
+
+const { sdk, page } = Astro.props as { sdk: Sdk; page: DocPage };
+const lang = Astro.params.lang as Lang;
+
+const doc = await renderDoc(readFileSync(`${docsRoot(sdk)}/${page.file}`, 'utf8'), {
+  repoRoot: repoRoot(sdk),
+  file: page.file,
+  resolveDoc: (file) => findDoc(lang, sdk, file),
+  repoUrl: (path) => repoRootFileUrl(sdk, path),
+  labels: { copy: t(lang, 'docs.copy'), copied: t(lang, 'docs.copied'), copyCode: t(lang, 'docs.copyCode') },
+});
+const heading = doc.title ?? page.title;
+const group = docsNav(sdk).find((g) => g.items.some((it) => 'page' in it && it.page === page))?.title;
+
+// «Назад» с первой страницы — обзор SDK.
+const pages = docsPages(sdk);
+const index = pages.indexOf(page);
+const prev = index > 0 ? { href: docUrl(lang, sdk, pages[index - 1]), title: pages[index - 1].title } : { href: docUrl(lang, sdk), title: t(lang, 'docs.overview') };
+const next = pages[index + 1] && { href: docUrl(lang, sdk, pages[index + 1]), title: pages[index + 1].title };
+---
+
+<DocsLayout lang={lang} sdk={sdk} title={`${heading} — ${sdk.package} — ANIPY`} description={sdk.description[lang]} toc={doc.toc} page={page}>
+  <article>
+    <div class="meta overline" data-rise style="--i: 0">
+      {sdk.number} — {sdk.package.toUpperCase()}{group && ` · ${group.toUpperCase()}`}
+    </div>
+    <h1 data-rise style="--i: 1">{heading}</h1>
+    <div class="prose" data-rise style="--i: 2" set:html={doc.html} />
+
+    <nav class="pager" aria-label={t(lang, 'docs.pages')}>
+      <a class="prev" href={prev.href}>
+        <span class="meta">← {t(lang, 'docs.prev').toUpperCase()}</span>
+        <span class="pager-title">{prev.title}</span>
+      </a>
+      {
+        next && (
+          <a class="next" href={next.href}>
+            <span class="meta">{t(lang, 'docs.next').toUpperCase()} →</span>
+            <span class="pager-title">{next.title}</span>
+          </a>
+        )
+      }
+    </nav>
+  </article>
+</DocsLayout>
+
+<script>
+  import '../../../../scripts/copy';
+</script>
+
+<style>
+  article {
+    max-width: 47.5rem;
+  }
+  .overline {
+    font-size: var(--meta-size-lg);
+  }
+  h1 {
+    margin: 1.25rem 0 0;
+    font-weight: 400;
+    font-size: 3.25rem;
+    line-height: 1.1;
+    letter-spacing: -0.005em;
+  }
+
+  /* Текст документа: разметка приходит из lib/markdown.ts, поэтому :global внутри .prose. */
+  .prose {
+    margin-top: 2.5rem;
+    font-size: 1.1875rem;
+    line-height: 1.6;
+    color: var(--body-soft);
+  }
+  .prose :global(> :first-child) {
+    margin-top: 0;
+  }
+  .prose :global(:is(h2, h3, h4)) {
+    color: var(--ink);
+    line-height: 1.25;
+  }
+  .prose :global(h2) {
+    margin: 3.5rem 0 0;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--divider);
+    font-weight: 500;
+    font-size: 2.125rem;
+  }
+  .prose :global(h3) {
+    margin: 2.5rem 0 0;
+    font-weight: 500;
+    font-size: 1.5rem;
+  }
+  .prose :global(h4) {
+    margin: 2rem 0 0;
+    font-weight: 500;
+    font-size: 1.25rem;
+  }
+  .prose :global(:is(p, ul, ol, blockquote)) {
+    margin: 1rem 0 0;
+  }
+  .prose :global(:is(ul, ol)) {
+    padding-left: 1.5rem;
+  }
+  .prose :global(li + li),
+  .prose :global(li > :is(ul, ol)) {
+    margin-top: 0.375rem;
+  }
+  .prose :global(li::marker) {
+    color: var(--muted);
+  }
+  .prose :global(strong) {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .prose :global(a) {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--rule);
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color var(--hover-duration) var(--ease-out);
+  }
+  .prose :global(a:hover) {
+    text-decoration-color: var(--ink);
+  }
+  .prose :global(:not(pre) > code) {
+    padding: 0.1em 0.35em;
+    border: 1px solid var(--rule-faint);
+    background: var(--code-bg);
+    font-family: var(--font-mono);
+    font-size: 0.8em;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+  .prose :global(blockquote) {
+    padding-left: 1.25rem;
+    border-left: 1px solid var(--rule);
+    color: var(--secondary);
+  }
+  .prose :global(hr) {
+    margin: 2.5rem 0;
+    border: 0;
+    border-top: 1px solid var(--divider);
+  }
+
+  .prose :global(.table-wrap) {
+    margin-top: 1.5rem;
+    overflow-x: auto;
+    border-top: 1px solid var(--divider);
+  }
+  .prose :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  .prose :global(th) {
+    text-align: left;
+    padding: 0.875rem 1rem 0.875rem 0;
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: var(--meta-size);
+    letter-spacing: var(--meta-tracking);
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--divider);
+  }
+  .prose :global(td) {
+    padding: 0.875rem 1rem 0.875rem 0;
+    vertical-align: top;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .prose :global(.admonition) {
+    margin: 1.75rem 0 0;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--divider);
+    border-left-color: var(--ink);
+    background: var(--row-open);
+  }
+  .prose :global(.admonition-warning) {
+    border-left-width: 3px;
+  }
+  .prose :global(.admonition > :first-child) {
+    margin-top: 0;
+  }
+  .prose :global(.admonition-title) {
+    font-family: var(--font-mono);
+    font-size: var(--meta-size-lg);
+    letter-spacing: var(--meta-tracking);
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .prose :global(.admonition-title code) {
+    border: 0;
+    padding: 0;
+    background: none;
+    font-size: inherit;
+  }
+
+  /* Блоки кода — как components/CodeBlock.astro. */
+  .prose :global(figure.code) {
+    margin: 1.5rem 0 0;
+  }
+  .prose :global(figure.code figcaption) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .prose :global(.copy) {
+    height: 2.25rem;
+    margin-bottom: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0 0.75rem;
+    background: transparent;
+    border: 1px solid var(--divider);
+    color: var(--secondary);
+    cursor: pointer;
+  }
+  .prose :global(pre) {
+    margin: 0;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--divider);
+    background: var(--code-bg);
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1.7;
+    font-variant-ligatures: none;
+    color: var(--ink);
+  }
+  .prose :global(pre code) {
+    font: inherit;
+  }
+
+  .pager {
+    margin-top: 5.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--divider);
+  }
+  .pager a {
+    flex: 1 1 16.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    padding: 1.75rem 1.5rem 1.5rem 0;
+  }
+  .pager .next {
+    align-items: flex-end;
+    text-align: right;
+    padding: 1.75rem 0 1.5rem 1.5rem;
+    border-left: 1px solid var(--divider);
+  }
+  .pager-title {
+    font-size: 1.375rem;
+    line-height: 1.3;
+  }
+
+  @media (max-width: 767px) {
+    h1 {
+      font-size: 2.375rem;
+    }
+    .prose {
+      font-size: 1.125rem;
+    }
+    .prose :global(h2) {
+      font-size: 1.75rem;
+    }
+    .pager a,
+    .pager .next {
+      padding: 1.5rem 0;
+      border-left: 0;
+    }
+    .pager .next {
+      border-top: 1px solid var(--divider);
+    }
+  }
+</style>

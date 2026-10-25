@@ -1,0 +1,353 @@
+---
+// Каркас документации SDK: шапка, слева знак SDK и меню страниц (nav mkdocs.yml),
+// справа «На этой странице». Обзор SDK и страницы документации — в слоте.
+import Base from '../layouts/Base.astro';
+import DocsHeader from './DocsHeader.astro';
+import type { Sdk } from '../data/sdks';
+import { docsNav, docUrl, type DocPage } from '../lib/mkdocs';
+import { loadCoverage } from '../lib/coverage';
+import { t, type Lang } from '../i18n';
+
+export type TocItem = { id: string; text: string; depth?: 2 | 3 };
+
+interface Props {
+  lang: Lang;
+  sdk: Sdk;
+  title: string;
+  description: string;
+  toc: TocItem[];
+  /** Страница документации; без неё — обзор SDK. */
+  page?: DocPage;
+}
+
+const { lang, sdk, title, description, toc, page } = Astro.props;
+
+// Первая группа меню — «Документация»: обзор и страницы верхнего уровня nav;
+// остальные группы nav — следом, в том же порядке; у страниц верхнего уровня после группы
+// с названием своего заголовка в nav нет — и в меню они без него. Примеры и изменения — в «Ещё».
+const nav = docsNav(sdk);
+const pages = (items: (typeof nav)[number]['items']) => items.flatMap((it) => ('page' in it ? [it.page] : []));
+const [first, ...rest] = nav;
+const groups = [
+  { title: t(lang, 'nav.docs'), overview: true, pages: first && !first.title ? pages(first.items) : [] },
+  ...(first && first.title ? [first] : []).concat(rest).map((g) => ({ title: g.title, overview: false, pages: pages(g.items) })),
+].filter((g) => g.overview || g.pages.length);
+
+const coverage = loadCoverage(sdk);
+const changelogHref = `/${lang}/changelog/#${sdk.package}`;
+---
+
+<Base lang={lang} title={title} description={description}>
+  <DocsHeader lang={lang} sdk={sdk} page={page?.title} />
+
+  <div class="layout">
+    <aside class="side">
+      <div class="mark" aria-hidden="true" data-parallax>
+        <span class="num">{sdk.number}</span>
+        <span class="mark-title">
+          <span class="jp" lang="ja" data-draw>{sdk.kana}</span>
+          <span class="mark-label">{sdk.label[lang]}</span>
+        </span>
+      </div>
+      <button class="menu-toggle meta" type="button" aria-expanded="false" aria-controls="docs-menu">
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.1" fill="none"></path></svg>
+        {t(lang, 'docs.menu').toUpperCase()}
+      </button>
+      <nav class="side-nav" id="docs-menu" aria-label={t(lang, 'docs.pages')}>
+        {
+          !page && toc.length > 0 && (
+            <div class="group on-page">
+              <span class="meta group-title">{t(lang, 'docs.onPage').toUpperCase()}</span>
+              {toc.map((item) => (
+                <a href={`#${item.id}`} data-toc={item.id}>
+                  {item.text}
+                </a>
+              ))}
+            </div>
+          )
+        }
+        {
+          groups.map((g) => (
+            <div class="group">
+              {g.title && <span class="meta group-title">{g.title.toUpperCase()}</span>}
+              {g.overview && (
+                <a href={docUrl(lang, sdk)} aria-current={page ? undefined : 'page'}>
+                  {t(lang, 'docs.overview')}
+                </a>
+              )}
+              {g.pages.map((p) => (
+                <a href={docUrl(lang, sdk, p)} aria-current={p === page ? 'page' : undefined}>
+                  {p.title}
+                </a>
+              ))}
+            </div>
+          ))
+        }
+        <div class="group">
+          <span class="meta group-title">{t(lang, 'docs.more').toUpperCase()}</span>
+          {coverage && <a class="more" href={`/${lang}/coverage/#${sdk.package}`}>{t(lang, 'nav.coverage')}</a>}
+          {sdk.examples && <a class="more" href={`/${lang}/examples/#${sdk.package}`}>{t(lang, 'nav.examples')}</a>}
+          <a class="more" href={changelogHref}>{t(lang, 'docs.changelog')}</a>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <slot />
+    </main>
+
+    <aside class="toc" aria-label={t(lang, 'docs.onPage')}>
+      {
+        toc.length > 0 && (
+          <div class="toc-inner">
+            <div class="meta group-title">{t(lang, 'docs.onPage').toUpperCase()}</div>
+            <ul>
+              {toc.map((item) => (
+                <li class={item.depth === 3 ? 'sub' : undefined}>
+                  <a href={`#${item.id}`} data-toc={item.id}>
+                    <span class="dash" aria-hidden="true" />
+                    {item.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      }
+    </aside>
+  </div>
+</Base>
+
+<script>
+  // Меню страниц на телефоне — по кнопке; на десктопе оно открыто всегда.
+  const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
+  toggle?.addEventListener('click', () => {
+    const open = toggle.getAttribute('aria-expanded') !== 'true';
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.closest('.side')?.classList.toggle('is-open', open);
+  });
+
+  // Подсветка текущего раздела в обеих навигациях.
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc]')];
+  const ids = [...new Set(links.map((a) => a.dataset.toc!))];
+  const setCurrent = (id: string) => {
+    for (const a of links) a.setAttribute('aria-current', a.dataset.toc === id ? 'location' : 'false');
+  };
+
+  // Пока идёт прокрутка после клика, подсветка остаётся на выбранном пункте:
+  // короткие нижние разделы не доезжают до верха, и иначе она «перескакивала» бы.
+  let locked = false;
+  let unlockTimer = 0;
+  const unlock = () => {
+    locked = false;
+    clearTimeout(unlockTimer);
+  };
+  window.addEventListener('scrollend', unlock);
+  // Ручная прокрутка колесом, тачем или клавишами отменяет блокировку сразу.
+  for (const type of ['wheel', 'touchstart', 'keydown']) window.addEventListener(type, unlock, { passive: true });
+
+  for (const a of links) {
+    a.addEventListener('click', (event) => {
+      const target = document.getElementById(a.dataset.toc!);
+      if (!target) return;
+      event.preventDefault();
+      setCurrent(a.dataset.toc!);
+      locked = true;
+      // Запасной выход для браузеров без scrollend и для случая, когда прокручивать некуда.
+      clearTimeout(unlockTimer);
+      unlockTimer = window.setTimeout(unlock, 1200);
+      target.scrollIntoView({ block: 'start' });
+      history.replaceState(null, '', `#${a.dataset.toc}`);
+    });
+  }
+
+  // Текущий раздел — последний, чей заголовок прошёл верхнюю треть окна.
+  // В самом низу страницы, куда пользователь докрутил сам, — последний раздел.
+  const update = () => {
+    if (locked || !ids.length) return;
+    let current = ids[0];
+    for (const id of ids) {
+      const el = document.getElementById(id);
+      if (el && el.getBoundingClientRect().top < window.innerHeight / 3) current = id;
+    }
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) current = ids[ids.length - 1];
+    setCurrent(current);
+  };
+  update();
+  window.addEventListener('scroll', update, { passive: true });
+</script>
+
+<style>
+  .layout {
+    max-width: 90rem;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  /* Левая колонка */
+  .side {
+    flex: 1 1 15rem;
+    max-width: 18.75rem;
+    padding: 3rem 2rem 3rem var(--page-gutter);
+    border-right: 1px solid var(--divider);
+    display: flex;
+    flex-direction: column;
+    gap: 2.75rem;
+  }
+  .mark {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .mark .num {
+    font-weight: 300;
+    font-size: 4rem;
+    line-height: 0.8;
+    letter-spacing: 0.04em;
+  }
+  .mark-title {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: flex-start;
+    gap: 0.375rem;
+  }
+  .mark-title .jp {
+    writing-mode: vertical-rl;
+    font-size: var(--jp-size-docs);
+  }
+  .mark-label {
+    writing-mode: vertical-rl;
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding-top: 0.25rem;
+  }
+  .menu-toggle {
+    display: none;
+  }
+  .side-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
+  .group {
+    display: flex;
+    flex-direction: column;
+  }
+  .group-title {
+    letter-spacing: 0.22em;
+    padding-bottom: 0.5rem;
+  }
+  .side-nav a {
+    font-size: 1.125rem;
+    padding: 0.5rem 0 0.5rem 0.875rem;
+    border-left: 1px solid var(--divider);
+    color: var(--secondary);
+  }
+  .side-nav a:is([aria-current='location'], [aria-current='page']) {
+    border-left-color: var(--ink);
+    color: var(--ink);
+  }
+  .side-nav a.more {
+    color: var(--tertiary);
+  }
+
+  /* Контент */
+  .main {
+    flex: 999 1 35rem;
+    min-width: 0;
+    padding: 4.5rem 4.5rem 6rem;
+  }
+
+  /* Правая колонка */
+  .toc {
+    flex: 1 1 12.5rem;
+    max-width: 15rem;
+    padding: 4.75rem 2.5rem 3rem 0;
+  }
+  .toc-inner {
+    position: sticky;
+    top: 2rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .toc ul {
+    list-style: none;
+    margin: 1rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    font-size: 1rem;
+  }
+  .toc a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.4375rem 0;
+    color: var(--secondary);
+  }
+  .toc .sub a {
+    padding-left: 1rem;
+    font-size: 0.9375rem;
+  }
+  .dash {
+    flex: 0 0 auto;
+    width: 0;
+    height: 1px;
+    background: var(--ink);
+    transition: width var(--toc-duration) var(--ease-out);
+  }
+  .toc a[aria-current='location'] {
+    color: var(--ink);
+  }
+  .toc a[aria-current='location'] .dash {
+    width: 1.25rem;
+  }
+
+  @media (max-width: 1100px) {
+    .toc {
+      display: none;
+    }
+  }
+  @media (max-width: 767px) {
+    .side {
+      max-width: none;
+      border-right: 0;
+      border-bottom: 1px solid var(--divider);
+      padding: 2rem var(--page-gutter);
+      gap: 1.5rem;
+    }
+    .menu-toggle {
+      align-self: flex-start;
+      height: var(--tap-min);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.625rem;
+      padding: 0 1rem;
+      background: transparent;
+      border: 1px solid var(--divider);
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .menu-toggle svg {
+      transition: transform var(--expand-duration) var(--ease);
+    }
+    .menu-toggle[aria-expanded='true'] svg {
+      transform: rotate(45deg);
+    }
+    .side-nav,
+    .side-nav .on-page {
+      display: none;
+    }
+    .side.is-open .side-nav {
+      display: flex;
+      animation: tab-rise var(--rise-duration) var(--ease-out) both;
+    }
+    .main {
+      padding: 2.5rem var(--page-gutter) 4.5rem;
+    }
+  }
+</style>

@@ -1,10 +1,11 @@
-// Подсветка кода для покрытия API на этапе сборки: Shiki с темой в оттенках серого,
+// Подсветка кода на этапе сборки (покрытие API, страницы документации): Shiki с темой в оттенках серого,
 // но вместо инлайн-стилей — короткие классы .hl-* (CoverageTable.css): JSON с подробностями
 // не раздувается, а цвета остаются токенами.
 import { createHighlighter, type Highlighter } from 'shiki';
 import { grayscale } from './grayscale-theme';
 
-export type Lang = 'json' | 'python';
+export type Lang = 'json' | 'python' | 'bash';
+export const langs: readonly Lang[] = ['json', 'python', 'bash'];
 
 const classes: Record<string, string> = {
   '#f5f5f5': 'hl-ink',
@@ -15,7 +16,7 @@ const classes: Record<string, string> = {
 };
 
 let highlighter: Promise<Highlighter> | undefined;
-const getHighlighter = () => (highlighter ??= createHighlighter({ themes: [grayscale], langs: ['json', 'python'] }));
+const getHighlighter = () => (highlighter ??= createHighlighter({ themes: [grayscale], langs: [...langs] }));
 
 const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
