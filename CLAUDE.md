@@ -70,7 +70,7 @@ src/
   layouts/Base.astro    # <head>, шрифты; шапки — в компонентах страниц
   components/DocsLayout.astro # каркас документации: шапка, меню страниц, «На этой странице»
   components/
-  pages/[lang]/         # /en/…, /ru/…: главная, docs/<package>/ (обзор) и docs/<package>/<страница>/, examples/, changelog/, coverage/ (#<package> — вкладка), about/
+  pages/[lang]/         # /en/…, /ru/…: главная, docs/<package>/ (обзор) и docs/<package|id общей документации>/<страница>/, examples/, changelog/, coverage/ (#<package> — вкладка), about/
   pages/data/coverage/  # статический JSON подробностей операций для таблицы покрытия
   pages/404.astro, 500.astro # одна страница на весь сайт, оба языка (components/ErrorPage.astro); 500.html отдаёт сервер
 public/logo.png         # знак ア в энсо из макета; на «О проекте» надпись под ним — текстом
@@ -83,7 +83,7 @@ public/media/           # видео, постеры и обложки пане�
 .sdk/                   # клоны репозиториев SDK для сборки, в git не попадает
 ```
 
-- Страницы документации — ровно `nav` из `mkdocs.yml` репозитория SDK (`lib/mkdocs.ts`); `docsNav` в `sdks.ts` — какие разделы `nav` относятся к SDK, когда репозиторий документирует несколько пакетов. `index.md`, `changelog.md`, `examples.md` заменяют свои страницы сайта (обзор, изменения, примеры). Текст не переводится и не правится — правки идут в репозиторий SDK.
+- Страницы документации — ровно `nav` из `mkdocs.yml` репозитория SDK (`lib/mkdocs.ts`); `docsNav` в `sdks.ts` — какие разделы `nav` относятся к SDK, когда репозиторий документирует несколько пакетов. Документация, общая для нескольких SDK одного репозитория (ядро `libsocial-core`), — запись в `sharedDocs` (`sdks.ts`): свой адрес `/docs/<id>/…`, без знака SDK и вкладки; в меню SDK, чей `docsNav` называет её раздел, — ссылки на эти страницы, а не копии. `index.md`, `changelog.md`, `examples.md` заменяют свои страницы сайта (обзор, изменения, примеры). Текст не переводится и не правится — правки идут в репозиторий SDK.
 - Справочник API — директивы mkdocstrings из страниц SDK. Данные извлекает `scripts/api-reference.py` тем же griffe, что у mkdocstrings, с опциями из `mkdocs.yml` и самой директивы (`members`, `inherited_members`, `show_root_heading`, `show_bases`, `merge_init_into_class`, порядок членов); сайт только рисует. Объект, которого нет, роняет sync и сборку — как `mkdocs build --strict`. Версия griffe — в шапке скрипта, держать как у SDK.
 - Ссылки в документации: на другие `.md` — на страницы сайта, якоря — те же, что у mkdocs (`slugify` в `lib/markdown.ts`); на прочие файлы репозитория — на GitHub.
 - Покрытие API есть у SDK с полем `coverage` в `sdks.ts`; у остальных вкладка показывает заглушку со ссылкой на `apiNotes`.

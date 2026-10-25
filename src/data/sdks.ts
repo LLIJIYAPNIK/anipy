@@ -86,7 +86,7 @@ export const sdks: readonly Sdk[] = [
     repo: { url: 'https://github.com/LLIJIYAPNIK/libsocial-sdk.git', dir: 'libsocial-sdk', path: 'packages/ranobelib' },
     apiNotes: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/blob/main/docs/api-notes.md',
     examples: { dir: 'examples', skip: 'mangalib' },
-    docsNav: ['ranobelib', 'API notes'],
+    docsNav: ['ranobelib', 'libsocial-core', 'API notes'],
     phrases: 'ranobe-phrases',
   },
   {
@@ -105,10 +105,45 @@ export const sdks: readonly Sdk[] = [
     repo: { url: 'https://github.com/LLIJIYAPNIK/libsocial-sdk.git', dir: 'libsocial-sdk', path: 'packages/mangalib' },
     apiNotes: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/blob/main/docs/api-notes.md',
     examples: { dir: 'examples', only: 'mangalib' },
-    docsNav: ['mangalib', 'API notes'],
+    docsNav: ['mangalib', 'libsocial-core', 'API notes'],
     covers: 'manga',
   },
 ];
+
+/** Документация, общая для нескольких SDK одного репозитория (ядро): своя страница
+ *  /docs/<id>/<страница>/, в меню этих SDK — раздел со ссылками на неё (их `docsNav` его называет). */
+export type SharedDocs = {
+  /** Сегмент адреса; он же имя пакета. */
+  id: string;
+  label: Text;
+  description: Text;
+  github: string;
+  repo: Sdk['repo'];
+  /** Раздел верхнего уровня `nav` из mkdocs.yml. */
+  section: string;
+};
+
+export const sharedDocs: readonly SharedDocs[] = [
+  {
+    id: 'libsocial-core',
+    label: { ru: 'Ядро ранобэ и манги', en: 'Light novel and manga core' },
+    description: {
+      ru: 'Общая часть SDK для сайтов lib.social: клиент API, загрузка тайтла, каталог, модели и исключения. Ставится вместе с ranobelib-python-sdk и mangalib-python-sdk.',
+      en: 'The part of the SDKs every lib.social site shares: the API client, title download, catalog, models and exceptions. Installed with ranobelib-python-sdk and mangalib-python-sdk.',
+    },
+    github: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/tree/main/packages/core',
+    repo: { url: 'https://github.com/LLIJIYAPNIK/libsocial-sdk.git', dir: 'libsocial-sdk', path: 'packages/core' },
+    section: 'libsocial-core',
+  },
+];
+
+/** Набор страниц документации: SDK коллекции или общая документация. */
+export type DocSet = Sdk | SharedDocs;
+export const isSdk = (set: DocSet): set is Sdk => 'package' in set;
+/** Сегмент адреса /docs/<ключ>/. */
+export const docSetKey = (set: DocSet) => (isSdk(set) ? set.package : set.id);
+/** SDK, в меню которых есть раздел общей документации. */
+export const usedBy = (shared: SharedDocs) => sdks.filter((s) => s.repo.dir === shared.repo.dir && s.docsNav?.includes(shared.section));
 
 export const owner = 'https://github.com/LLIJIYAPNIK';
 
@@ -120,7 +155,7 @@ export const repoFileUrl = (sdk: Sdk, file: string) =>
   `${sdk.repo.url.replace(/\.git$/, '')}/blob/main/${[sdk.repo.path, file].filter(Boolean).join('/')}`;
 
 /** Файл на GitHub по пути от корня репозитория SDK. */
-export const repoRootFileUrl = (sdk: Sdk, file: string) => `${sdk.repo.url.replace(/\.git$/, '')}/blob/main/${file}`;
+export const repoRootFileUrl = (sdk: DocSet, file: string) => `${sdk.repo.url.replace(/\.git$/, '')}/blob/main/${file}`;
 
 /** CHANGELOG.md SDK на GitHub. */
 export const changelogUrl = (sdk: Sdk) => repoFileUrl(sdk, 'CHANGELOG.md');

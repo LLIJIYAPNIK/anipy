@@ -127,6 +127,7 @@ export const ru = {
   'docs.prev': 'Назад',
   'docs.copyCode': 'Скопировать код',
   'docs.pages': 'Страницы документации',
+  'docs.usedIn': 'Используется в',
   'api.parameters': 'Параметры',
   'api.otherParameters': 'Другие параметры',
   'api.attributes': 'Атрибуты',

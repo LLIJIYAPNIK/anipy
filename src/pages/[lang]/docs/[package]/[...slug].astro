@@ -1,33 +1,35 @@
 ---
-// Страница документации SDK из его репозитория (#63): файл из nav mkdocs.yml → HTML в стиле сайта.
+// Страница документации из репозитория SDK (#63): файл из nav mkdocs.yml → HTML в стиле сайта.
+// Набор — SDK коллекции или общая документация нескольких SDK (ядро, #65).
 import { readFileSync } from 'node:fs';
 import DocsLayout from '../../../../components/DocsLayout.astro';
-import { sdks, repoRootFileUrl, type Sdk } from '../../../../data/sdks';
-import { docsNav, docsPages, docsRoot, docUrl, findDoc, repoRoot, type DocPage } from '../../../../lib/mkdocs';
+import { docSetKey, isSdk, repoRootFileUrl, type DocSet } from '../../../../data/sdks';
+import { docSets, docsNav, docsPages, docsRoot, docUrl, findDoc, repoRoot, type DocPage } from '../../../../lib/mkdocs';
 import { renderDoc, type RenderOptions } from '../../../../lib/markdown';
 import { directive, resolveRef, type ApiContext } from '../../../../lib/api-reference';
 import { langs, t, type Lang } from '../../../../i18n';
 
 export const getStaticPaths = () =>
   langs.flatMap((lang) =>
-    sdks.flatMap((sdk) => docsPages(sdk).map((page) => ({ params: { lang, package: sdk.package, slug: page.slug }, props: { sdk, page } }))),
+    docSets.flatMap((set) => docsPages(set).map((page) => ({ params: { lang, package: docSetKey(set), slug: page.slug }, props: { set, page } }))),
   );
 
-const { sdk, page } = Astro.props as { sdk: Sdk; page: DocPage };
+const { set, page } = Astro.props as { set: DocSet; page: DocPage };
+const key = docSetKey(set);
 const lang = Astro.params.lang as Lang;
 
 const md: RenderOptions = {
-  repoRoot: repoRoot(sdk),
+  repoRoot: repoRoot(set),
   file: page.file,
-  resolveDoc: (file) => findDoc(lang, sdk, file),
-  repoUrl: (path) => repoRootFileUrl(sdk, path),
+  resolveDoc: (file) => findDoc(lang, set, file),
+  repoUrl: (path) => repoRootFileUrl(set, path),
   labels: { copy: t(lang, 'docs.copy'), copied: t(lang, 'docs.copied'), copyCode: t(lang, 'docs.copyCode') },
-  resolveRef: (path) => resolveRef(lang, sdk, path),
+  resolveRef: (path) => resolveRef(lang, set, path),
 };
 // Справочник API (#64): директивы `::: путь` — объекты из .sdk/api (scripts/api-reference.py).
 const api: ApiContext = {
   lang,
-  sdk,
+  sdk: set,
   md,
   labels: {
     sections: {
@@ -49,33 +51,45 @@ const api: ApiContext = {
     bases: t(lang, 'api.bases'),
     source: t(lang, 'api.source').toUpperCase(),
   },
-  sourceUrl: (file, start, end) => `${repoRootFileUrl(sdk, file)}#L${start}-L${end}`,
+  sourceUrl: (file, start, end) => `${repoRootFileUrl(set, file)}#L${start}-L${end}`,
 };
 md.renderDirective = (ident) => directive(ident, api);
-const doc = await renderDoc(readFileSync(`${docsRoot(sdk)}/${page.file}`, 'utf8'), md);
+const doc = await renderDoc(readFileSync(`${docsRoot(set)}/${page.file}`, 'utf8'), md);
 const heading = doc.title ?? page.title;
-const group = docsNav(sdk).find((g) => g.items.some((it) => 'page' in it && it.page === page))?.title;
+// Группа nav, если она не повторяет название набора (раздел libsocial-core у ядра).
+const navGroup = docsNav(set).find((g) => g.items.some((it) => 'page' in it && it.page === page))?.title;
+const group = navGroup !== key ? navGroup : undefined;
 
-// «Назад» с первой страницы — обзор SDK.
-const pages = docsPages(sdk);
+// «Назад» с первой страницы SDK — его обзор; у общей документации обзора нет.
+const pages = docsPages(set);
 const index = pages.indexOf(page);
-const prev = index > 0 ? { href: docUrl(lang, sdk, pages[index - 1]), title: pages[index - 1].title } : { href: docUrl(lang, sdk), title: t(lang, 'docs.overview') };
-const next = pages[index + 1] && { href: docUrl(lang, sdk, pages[index + 1]), title: pages[index + 1].title };
+const prev =
+  index > 0
+    ? { href: docUrl(lang, set, pages[index - 1]), title: pages[index - 1].title }
+    : isSdk(set)
+      ? { href: docUrl(lang, set), title: t(lang, 'docs.overview') }
+      : undefined;
+const next = pages[index + 1] && { href: docUrl(lang, set, pages[index + 1]), title: pages[index + 1].title };
 ---
 
-<DocsLayout lang={lang} sdk={sdk} title={`${heading} — ${sdk.package} — ANIPY`} description={sdk.description[lang]} toc={doc.toc} page={page}>
+<DocsLayout lang={lang} set={set} title={heading === key ? `${key} — ANIPY` : `${heading} — ${key} — ANIPY`} description={set.description[lang]} toc={doc.toc} page={page}>
   <article>
     <div class="meta overline" data-rise style="--i: 0">
-      {sdk.number} — {sdk.package.toUpperCase()}{group && ` · ${group.toUpperCase()}`}
+      {isSdk(set) && `${set.number} — `}
+      {key.toUpperCase()}{group && ` · ${group.toUpperCase()}`}
     </div>
     <h1 data-rise style="--i: 1">{heading}</h1>
     <div class="prose" data-rise style="--i: 2" set:html={doc.html} />
 
     <nav class="pager" aria-label={t(lang, 'docs.pages')}>
-      <a class="prev" href={prev.href}>
-        <span class="meta">← {t(lang, 'docs.prev').toUpperCase()}</span>
-        <span class="pager-title">{prev.title}</span>
-      </a>
+      {
+        prev && (
+          <a class="prev" href={prev.href}>
+            <span class="meta">← {t(lang, 'docs.prev').toUpperCase()}</span>
+            <span class="pager-title">{prev.title}</span>
+          </a>
+        )
+      }
       {
         next && (
           <a class="next" href={next.href}>
@@ -403,6 +417,9 @@ const next = pages[index + 1] && { href: docUrl(lang, sdk, pages[index + 1]), ti
     text-align: right;
     padding: 1.75rem 0 1.5rem 1.5rem;
     border-left: 1px solid var(--divider);
+  }
+  .pager .next:first-child {
+    border-left: 0;
   }
   .pager-title {
     font-size: 1.375rem;

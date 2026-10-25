@@ -4,12 +4,12 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { sdks } from '../src/data/sdks.ts';
+import { sdks, sharedDocs } from '../src/data/sdks.ts';
 
 const root = '.sdk';
 mkdirSync(root, { recursive: true });
 
-const repos = new Map(sdks.map((sdk) => [sdk.repo.dir, sdk.repo.url]));
+const repos = new Map([...sdks, ...sharedDocs].map((set) => [set.repo.dir, set.repo.url]));
 
 for (const [dir, url] of repos) {
   const target = join(root, dir);
