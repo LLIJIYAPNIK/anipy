@@ -1,7 +1,8 @@
 // Markdown документации SDK → HTML в стиле сайта, на этапе сборки.
 // Повторяет то, что включено в mkdocs.yml репозиториев: GFM-таблицы, admonition (`!!! note "…"`),
 // pymdownx.snippets (`--8<-- "файл"`), toc (якоря заголовков как у mkdocs — ссылки вида
-// `api-notes.md#раздел` из документации продолжают работать) и autorefs (`[текст][aniliberty.X]`).
+// `api-notes.md#раздел` из документации продолжают работать), autorefs (`[текст][aniliberty.X]`)
+// и директивы mkdocstrings (`::: aniliberty.X` — объект справочника API, lib/api-reference.ts).
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { isAbsolute, posix, relative, resolve, sep } from 'node:path';
 import { unified } from 'unified';
@@ -28,6 +29,10 @@ export type RenderOptions = {
   repoUrl: (path: string) => string;
   /** Подписи кнопки копирования кода. */
   labels: { copy: string; copied: string; copyCode: string };
+  /** Адрес объекта API по его пути (autorefs) — или undefined, если на сайте его нет. */
+  resolveRef?: (path: string) => string | undefined;
+  /** Директива `::: путь`: HTML объекта и его пункт в «На этой странице». */
+  renderDirective?: (ident: string) => { toc?: TocEntry; html: () => Promise<string> };
 };
 
 export type RenderedDoc = { title?: string; html: string; toc: TocEntry[] };
@@ -57,6 +62,10 @@ const expandSnippets = (md: string, root: string) =>
 // admonition: после строки `!!! тип "заголовок"` — пустая строка, чтобы тело с отступом в 4 пробела
 // разобралось как отдельный блок кода, а не как продолжение абзаца; дальше remarkAdmonitions.
 const separateAdmonitions = (md: string) => md.replace(/^(!!!\s+\w+.*)$/gm, '$1\n');
+
+// Директива mkdocstrings с блоком `options:` под ней (отступ 4 пробела) → блок кода anipy-api
+// с путём объекта: так она переживает разбор markdown и заменяется объектом при обходе.
+const directiveBlocks = (md: string) => md.replace(/^:::[ \t]+(\S+)[ \t]*$(?:\n(?: {4}.*|[ \t]*)$)*/gm, '\n```anipy-api\n$1\n```\n');
 
 // autorefs: ссылки на объекты API без определения ссылки в тексте. Как обычный markdown они
 // разобрались бы буквальным текстом, поэтому заранее превращаются в ссылки со схемой anipy-ref:.
@@ -143,15 +152,20 @@ const rewriteHref = (href: string, opts: RenderOptions) => {
   return opts.repoUrl(posix.normalize(posix.join('docs', file))) + anchor;
 };
 
-export const renderDoc = async (source: string, opts: RenderOptions): Promise<RenderedDoc> => {
-  const md = autorefs(separateAdmonitions(expandSnippets(source.replace(/\r\n/g, '\n'), opts.repoRoot)));
+/** Markdown → HTML: страница (`page` — заголовок первого уровня уходит в title, h2/h3 — в оглавление)
+ *  или фрагмент (docstring объекта API). */
+const render = async (source: string, opts: RenderOptions, page: boolean): Promise<RenderedDoc> => {
+  let md = source.replace(/\r\n/g, '\n');
+  if (page) md = directiveBlocks(expandSnippets(md, opts.repoRoot));
+  md = autorefs(separateAdmonitions(md));
   const processor = markdown().use(remarkAdmonitions).use(remarkRehype);
   const tree = (await processor.run(processor.parse(md))) as HRoot;
 
   const toc: TocEntry[] = [];
   const seen = new Set<string>();
   let title: string | undefined;
-  const codes: { node: Element; parent: { children: ElementContent[] } }[] = [];
+  // Асинхронные замены (подсветка кода, объекты API) — после обхода, в порядке документа.
+  const later: { node: Element; parent: { children: ElementContent[] }; html: () => Promise<string> }[] = [];
 
   visit(tree, 'element', (node: Element, index, parent) => {
     if (!parent || index === undefined) return;
@@ -159,20 +173,25 @@ export const renderDoc = async (source: string, opts: RenderOptions): Promise<Re
     if (heading) {
       const text = toString(node).trim();
       // Заголовок первого уровня — название страницы, страница выводит его сама.
-      if (heading[1] === '1' && title === undefined) {
+      if (page && heading[1] === '1' && title === undefined) {
         title = text;
         parent.children.splice(index, 1);
         return [SKIP, index];
       }
       const id = unique(slugify(text), seen);
       node.properties = { ...node.properties, id };
-      if (heading[1] === '2' || heading[1] === '3') toc.push({ depth: Number(heading[1]) as 2 | 3, id, text });
+      if (page && (heading[1] === '2' || heading[1] === '3')) toc.push({ depth: Number(heading[1]) as 2 | 3, id, text });
       return;
     }
     if (node.tagName === 'a') {
       const href = String(node.properties?.href ?? '');
       if (href.startsWith('anipy-ref:')) {
-        // Ссылки на объекты справочника API — после #64; пока остаётся текст ссылки.
+        // Объект, которого на сайте нет (например, из стороннего пакета), остаётся текстом.
+        const target = opts.resolveRef?.(href.slice('anipy-ref:'.length));
+        if (target) {
+          node.properties = { ...node.properties, href: target };
+          return;
+        }
         parent.children.splice(index, 1, ...node.children);
         return [SKIP, index];
       }
@@ -187,20 +206,33 @@ export const renderDoc = async (source: string, opts: RenderOptions): Promise<Re
       return;
     }
     if (node.tagName === 'pre' && isElement(node.children[0], 'code')) {
-      codes.push({ node, parent: parent as { children: ElementContent[] } });
+      const code = node.children[0] as Element;
+      const cls = ((code.properties?.className as string[] | undefined) ?? []).find((c) => c.startsWith('language-'));
+      const lang = cls?.slice('language-'.length) ?? '';
+      const value = toString(code).replace(/\n$/, '');
+      const at = { node, parent: parent as { children: ElementContent[] } };
+      if (lang === 'anipy-api') {
+        if (!opts.renderDirective) throw new Error(`::: ${value} in ${opts.file}: no API reference renderer`);
+        const directive = opts.renderDirective(value);
+        if (directive.toc) toc.push(directive.toc);
+        later.push({ ...at, html: directive.html });
+      } else {
+        later.push({ ...at, html: () => codeFigure(value, lang, opts.labels) });
+      }
       return SKIP;
     }
   });
 
-  // Подсветка асинхронная — блоки кода заменяются после обхода.
-  for (const { node, parent } of codes) {
-    const code = node.children[0] as Element;
-    const cls = ((code.properties?.className as string[] | undefined) ?? []).find((c) => c.startsWith('language-'));
-    const lang = cls?.slice('language-'.length) ?? '';
-    const value = toString(code).replace(/\n$/, '');
-    parent.children[parent.children.indexOf(node)] = { type: 'raw', value: await codeFigure(value, lang, opts.labels) } as unknown as ElementContent;
+  for (const { node, parent, html } of later) {
+    parent.children[parent.children.indexOf(node)] = { type: 'raw', value: await html() } as unknown as ElementContent;
   }
 
   const html = unified().use(rehypeStringify, { allowDangerousHtml: true }).stringify(tree);
   return { title, html, toc };
 };
+
+/** Страница документации из docs/ репозитория SDK. */
+export const renderDoc = (source: string, opts: RenderOptions) => render(source, opts, true);
+
+/** Фрагмент markdown внутри страницы — описание объекта API из docstring. */
+export const renderFragment = async (source: string, opts: RenderOptions) => (await render(source, opts, false)).html;
