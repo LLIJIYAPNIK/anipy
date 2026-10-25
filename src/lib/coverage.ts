@@ -1,12 +1,12 @@
 // Данные страницы покрытия API из клона SDK в .sdk/: таблица endpoints.md,
-// подробности операций из OpenAPI и методов SDK из исходников.
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+// подробности операций из OpenAPI и методов SDK — из данных griffe (lib/api-reference.ts).
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { sdkDir, type Sdk } from '../data/sdks';
 import { groupForTag, type GroupKey } from '../data/coverage-groups';
 import { parseEndpoints, type Status } from './endpoints';
 import { operationDetail, type OperationDetail } from './openapi';
-import { methodDoc, parseClasses, type MethodDoc } from './pydoc';
+import { apiClasses, type ApiClass } from './api-reference';
 import { highlight } from './highlight';
 
 export type CoverageRow = {
@@ -26,11 +26,59 @@ export type CoverageDetail = {
   html: { example?: string; bodyExample?: string; sdk: { sig: string; example?: string }[] };
 };
 
-const pyFiles = (dir: string): string[] =>
-  readdirSync(dir).flatMap((name) => {
-    const path = join(dir, name);
-    return statSync(path).isDirectory() ? pyFiles(path) : name.endsWith('.py') ? [path] : [];
-  });
+export type MethodDoc = {
+  call: string;
+  cls: string;
+  sig: string;
+  summary: string;
+  args: [string, string][];
+  returns?: string;
+  raises: [string, string][];
+  example?: string;
+};
+
+/** Длинная сигнатура — по аргументу на строку, как в макете. */
+export const formatSig = (sig: string) => {
+  const open = sig.indexOf('(');
+  const close = sig.lastIndexOf(')');
+  if (open < 0 || close < open || sig.length <= 72) return sig;
+  const parts: string[] = [];
+  let depth = 0;
+  let cur = '';
+  for (const ch of sig.slice(open + 1, close)) {
+    if ('([{'.includes(ch)) depth++;
+    if (')]}'.includes(ch)) depth--;
+    if (ch === ',' && depth === 0) {
+      parts.push(cur.trim());
+      cur = '';
+    } else cur += ch;
+  }
+  if (cur.trim()) parts.push(cur.trim());
+  return sig.slice(0, open + 1) + '\n' + parts.map((p) => `    ${p},`).join('\n') + '\n' + sig.slice(close);
+};
+
+/** Документация вызова `client.a.b.method()`: по атрибутам-ресурсам от класса клиента. */
+const methodDoc = (classes: Record<string, ApiClass>, root: string, call: string): MethodDoc | undefined => {
+  const parts = call.replace(/\(\)$/, '').split('.').slice(1);
+  let cls = root;
+  for (const attr of parts.slice(0, -1)) {
+    const next = classes[cls]?.attrs[attr];
+    if (!next) return undefined;
+    cls = next;
+  }
+  const method = classes[cls]?.methods[parts.at(-1)!];
+  if (!method) return undefined;
+  return {
+    call,
+    cls: classes[cls].name,
+    sig: formatSig(method.sig),
+    summary: method.summary,
+    args: method.args,
+    returns: method.returns ?? undefined,
+    raises: method.raises,
+    example: method.example ?? undefined,
+  };
+};
 
 const read = (path: string) => {
   try {
@@ -74,7 +122,7 @@ export const loadCoverageDetails = async (sdk: Sdk): Promise<Record<string, Cove
   const base = sdkDir(sdk);
   const specText = read(join(base, sdk.coverage.spec));
   const spec = specText ? JSON.parse(specText) : undefined;
-  const classes = parseClasses(pyFiles(join(base, sdk.coverage.source)).map((f) => read(f) ?? ''));
+  const classes = apiClasses(sdk);
   // Корень — класс клиента: у него больше всего атрибутов-ресурсов.
   const root = Object.entries(classes).sort((a, b) => Object.keys(b[1].attrs).length - Object.keys(a[1].attrs).length)[0]?.[0] ?? '';
 

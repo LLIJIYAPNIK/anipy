@@ -40,18 +40,35 @@ export type ApiObject = {
   showBases?: boolean;
 };
 
-const loaded = new Map<string, Record<string, ApiObject>>();
-
-const directivesOf = (sdk: DocSet) => {
-  const file = `.sdk/api/${sdk.repo.dir}.json`;
-  let objects = loaded.get(file);
-  if (!objects) {
-    if (!existsSync(file)) throw new Error(`${file} is missing: run npm run sync (needs uv for the API reference)`);
-    objects = (JSON.parse(readFileSync(file, 'utf8')) as { directives: Record<string, ApiObject> }).directives;
-    loaded.set(file, objects);
-  }
-  return objects;
+/** Метод для таблицы покрытия API: сигнатура как в исходнике и docstring по разделам. */
+export type CallDoc = {
+  sig: string;
+  summary: string;
+  args: [string, string][];
+  returns: string | null;
+  raises: [string, string][];
+  example: string | null;
 };
+/** Класс пакета: ресурсы-атрибуты (имя → канонический путь класса) и методы, с унаследованными. */
+export type ApiClass = { name: string; attrs: Record<string, string>; methods: Record<string, CallDoc> };
+
+type ApiData = { directives: Record<string, ApiObject>; classes: Record<string, ApiClass> };
+const loaded = new Map<string, ApiData>();
+
+const dataOf = (sdk: DocSet) => {
+  const file = `.sdk/api/${sdk.repo.dir}.json`;
+  let data = loaded.get(file);
+  if (!data) {
+    if (!existsSync(file)) throw new Error(`${file} is missing: run npm run sync (needs uv for the API reference)`);
+    data = JSON.parse(readFileSync(file, 'utf8')) as ApiData;
+    loaded.set(file, data);
+  }
+  return data;
+};
+const directivesOf = (sdk: DocSet) => dataOf(sdk).directives;
+
+/** Классы пакетов репозитория SDK по каноническому пути — для таблицы покрытия API (#72). */
+export const apiClasses = (sdk: DocSet) => dataOf(sdk).classes;
 
 /** Объект директивы `::: ident`; не нашёлся — сборка падает, как `mkdocs build --strict`. */
 export const apiObject = (sdk: DocSet, ident: string) => {
