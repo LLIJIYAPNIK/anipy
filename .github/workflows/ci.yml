@@ -48,6 +48,7 @@ jobs:
           curl -fsS -o /dev/null http://127.0.0.1:8081/sitemap-index.xml
           curl -fsS -o /dev/null http://127.0.0.1:8081/robots.txt
           curl -fsS -o /dev/null http://127.0.0.1:8081/og/anipy.png
+          curl -fsS http://127.0.0.1:8081/changelog.xml | grep -q '<feed'
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8081/)" = 302
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8081/no-such-page/)" = 404
           curl -s http://127.0.0.1:8081/no-such-page/ | grep -q 'ANIPY'
