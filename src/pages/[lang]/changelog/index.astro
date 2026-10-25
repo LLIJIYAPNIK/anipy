@@ -102,9 +102,12 @@ const earlierText = (n: number, from: string, to: string) =>
           </ol>
           <div class="log-foot">
             {earlier.length > 0 && <span class="earlier">{earlierText(earlier.length, earlier.at(-1)!.version, earlier[0].version)}</span>}
-            <a href={changelogUrl(sdk)} target="_blank" rel="noopener noreferrer">
-              CHANGELOG.md ↗
-            </a>
+            <span class="foot-links">
+              <a href="/changelog.xml">{t(lang, 'changelog.feed').toUpperCase()}</a>
+              <a href={changelogUrl(sdk)} target="_blank" rel="noopener noreferrer">
+                CHANGELOG.md ↗
+              </a>
+            </span>
           </div>
         </div>
       ))
@@ -301,6 +304,13 @@ const earlierText = (n: number, from: string, to: string) =>
     font-size: 1.25rem;
     font-style: italic;
     color: var(--secondary);
+  }
+  /* Лента Atom (#70) — общая для всех SDK, ссылка рядом с CHANGELOG.md каждой вкладки. */
+  .foot-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 2rem;
+    margin-left: auto;
   }
   .log-foot a {
     padding: 0.625rem 0;

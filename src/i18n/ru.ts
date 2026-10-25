@@ -128,6 +128,8 @@ export const ru = {
   'docs.copyCode': 'Скопировать код',
   'docs.pages': 'Страницы документации',
   'docs.usedIn': 'Используется в',
+  'docs.version': 'Версия',
+  'changelog.feed': 'Лента Atom',
   'docs.original': 'Текст страницы — оригинал из репозитория SDK, на английском.',
   'docs.sourceFile': 'Исходный файл',
   'search.open': 'Поиск',

@@ -3,6 +3,7 @@ import CoverWall from './CoverWall.astro';
 import GithubButton from './GithubButton.astro';
 import ReadingLine from './ReadingLine.astro';
 import type { Sdk } from '../data/sdks';
+import { latestVersion } from '../lib/versions';
 import { t, type Lang } from '../i18n';
 
 interface Props {
@@ -19,7 +20,9 @@ const order = `--i: ${index + 6}`;
 // со сдвигом в полдлительности (очерёдность, #45). Только токены: reduced motion обнулит.
 const drawOrder = `--after: calc(var(--rise-duration) + var(--stagger) * 8 + var(--draw-duration) * ${index * 0.5})`;
 const route = `/${lang}/docs/${sdk.package}/`;
-const meta = `${sdk.license} · PYTHON ${sdk.python}`;
+// Версия — с PyPI при сборке (lib/versions.ts).
+const version = await latestVersion(sdk);
+const meta = `${version ? `v${version.version} · ` : ''}${sdk.license} · PYTHON ${sdk.python}`;
 const githubLabel = `${sdk.package} ${t(lang, 'nav.onGithub')}`;
 const id = `sdk-${sdk.package}`;
 const video = sdk.video && `/media/${sdk.video}`;
