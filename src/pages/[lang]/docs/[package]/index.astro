@@ -5,6 +5,7 @@ import CodeBlock from '../../../../components/CodeBlock.astro';
 import { sdks, sdkDir, type Sdk } from '../../../../data/sdks';
 import { readmeParts } from '../../../../lib/readme';
 import { loadCoverage } from '../../../../lib/coverage';
+import { latestVersion } from '../../../../lib/versions';
 import { langs, t, type Key, type Lang } from '../../../../i18n';
 
 export const getStaticPaths = () =>
@@ -31,6 +32,7 @@ const orLabel = t(lang, 'docs.or');
 const changelogHref = `/${lang}/changelog/#${sdk.package}`;
 const coverage = loadCoverage(sdk);
 const coverageHref = `/${lang}/coverage/#${sdk.package}`;
+const version = await latestVersion(sdk);
 ---
 
 <DocsLayout lang={lang} set={sdk} title={`${sdk.package} — ANIPY`} description={sdk.description[lang]} toc={toc}>
@@ -39,6 +41,13 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
     <h1 data-rise style="--i: 1">{sdk.package}</h1>
     <p class="description" data-rise style="--i: 2">{sdk.description[lang]}</p>
     <div class="facts meta" data-rise style="--i: 3">
+      {
+        version && (
+          <a href={changelogHref}>
+            {t(lang, 'docs.version').toUpperCase()} {version.version} · {version.date}
+          </a>
+        )
+      }
       <span>PYTHON {sdk.python}</span>
       <span>{t(lang, 'docs.license').toUpperCase()} {sdk.license}</span>
       <a href={`https://pypi.org/project/${sdk.package}/`} target="_blank" rel="noopener noreferrer">PYPI ↗</a>

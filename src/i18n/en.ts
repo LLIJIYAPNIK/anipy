@@ -130,6 +130,8 @@ export const en: Record<keyof typeof ru, string> = {
   'docs.copyCode': 'Copy the code',
   'docs.pages': 'Documentation pages',
   'docs.usedIn': 'Used in',
+  'docs.version': 'Version',
+  'changelog.feed': 'Atom feed',
   'docs.original': 'The page text is the original from the SDK repository, in English.',
   'docs.sourceFile': 'Source file',
   'search.open': 'Search',
