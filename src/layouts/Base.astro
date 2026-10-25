@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css';
-import type { Lang } from '../i18n';
+import { langs, switchLang, type Lang } from '../i18n';
 
 interface Props {
   lang: Lang;
@@ -8,9 +8,21 @@ interface Props {
   description?: string;
   /** Страница в один экран: масштаб и по высоте окна (global.css, html.fit-screen). */
   fit?: boolean;
+  /** Картинка превью ссылки (public/og/, scripts/prepare-og.mjs); по умолчанию — общая сайта. */
+  image?: string;
+  /** Страницы ошибок: не индексировать. */
+  noindex?: boolean;
 }
 
-const { lang, title, description, fit = false } = Astro.props;
+const { lang, title, description, fit = false, image = '/og/anipy.png', noindex = false } = Astro.props;
+
+// SEO (#69): канонический адрес, та же страница на другом языке, превью ссылки.
+const site = Astro.site ?? new URL('https://anipy.ru');
+const canonical = new URL(Astro.url.pathname, site).href;
+const localized = /^\/(ru|en)(\/|$)/.test(Astro.url.pathname);
+const alternates = localized ? langs.map((l) => ({ lang: l, href: new URL(switchLang(Astro.url.pathname, l), site).href })) : [];
+const locale = { ru: 'ru_RU', en: 'en_US' };
+const imageUrl = new URL(image, site).href;
 ---
 
 <!doctype html>
@@ -20,6 +32,20 @@ const { lang, title, description, fit = false } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    {alternates.map((a) => <link rel="alternate" hreflang={a.lang} href={a.href} />)}
+    {alternates.length > 0 && <link rel="alternate" hreflang="x-default" href={alternates.find((a) => a.lang === 'ru')!.href} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ANIPY" />
+    <meta property="og:title" content={title} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={locale[lang]} />
+    {alternates.filter((a) => a.lang !== lang).map((a) => <meta property="og:locale:alternate" content={locale[a.lang]} />)}
+    <meta property="og:image" content={imageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/logo.png" />
     <!-- До первой отрисовки: анимации появления включаются только при работающем JS. -->
     <script is:inline>
