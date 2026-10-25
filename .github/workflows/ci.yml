@@ -20,7 +20,8 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       # uv запускает griffe для справочника API (scripts/api-reference.py в npm run sync).
-      - uses: astral-sh/setup-uv@v10
+      # Мажорных тегов (v10) у setup-uv нет — только полные версии.
+      - uses: astral-sh/setup-uv@v10.3.2
         with:
           version: 0.13.5
       - run: npm ci
