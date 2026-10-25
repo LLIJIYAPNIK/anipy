@@ -9,7 +9,7 @@
     "sync": "node scripts/sync-sdk.mjs",
     "dev": "astro dev",
     "check": "astro check",
-    "build": "astro build",
+    "build": "astro build && pagefind --site dist",
     "preview": "astro preview"
   },
   "dependencies": {
@@ -31,6 +31,7 @@
     "@types/hast": "^3.0.5",
     "@types/mdast": "^4.0.4",
     "@types/node": "^22.20.5",
+    "pagefind": "^1.5.2",
     "typescript": "^5.8.0"
   }
 }
