@@ -130,6 +130,8 @@ export const en: Record<keyof typeof ru, string> = {
   'docs.copyCode': 'Copy the code',
   'docs.pages': 'Documentation pages',
   'docs.usedIn': 'Used in',
+  'docs.original': 'The page text is the original from the SDK repository, in English.',
+  'docs.sourceFile': 'Source file',
   'api.parameters': 'Parameters',
   'api.otherParameters': 'Other parameters',
   'api.attributes': 'Attributes',
