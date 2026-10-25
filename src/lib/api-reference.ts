@@ -2,8 +2,8 @@
 // scripts/api-reference.py извлёк griffe при `npm run sync`, → HTML в стиле сайта.
 // Ссылки на объекты — из autorefs в тексте и из аннотаций — ведут на якоря всех страниц справочника.
 import { existsSync, readFileSync } from 'node:fs';
-import { sdks, type Sdk } from '../data/sdks';
-import { docsPages, docsRoot, docUrl } from './mkdocs';
+import { docSetKey, type DocSet } from '../data/sdks';
+import { docSets, docsPages, docsRoot, docUrl } from './mkdocs';
 import { renderFragment, type RenderOptions, type TocEntry } from './markdown';
 
 /** Кусок сигнатуры или аннотации: текст или имя со ссылкой по каноническому пути. */
@@ -42,7 +42,7 @@ export type ApiObject = {
 
 const loaded = new Map<string, Record<string, ApiObject>>();
 
-const directivesOf = (sdk: Sdk) => {
+const directivesOf = (sdk: DocSet) => {
   const file = `.sdk/api/${sdk.repo.dir}.json`;
   let objects = loaded.get(file);
   if (!objects) {
@@ -54,22 +54,22 @@ const directivesOf = (sdk: Sdk) => {
 };
 
 /** Объект директивы `::: ident`; не нашёлся — сборка падает, как `mkdocs build --strict`. */
-export const apiObject = (sdk: Sdk, ident: string) => {
+export const apiObject = (sdk: DocSet, ident: string) => {
   const obj = directivesOf(sdk)[ident];
-  if (!obj) throw new Error(`::: ${ident} (${sdk.package}): not in .sdk/api — run npm run sync`);
+  if (!obj) throw new Error(`::: ${ident} (${docSetKey(sdk)}): not in .sdk/api — run npm run sync`);
   return obj;
 };
 
 const DIRECTIVE = /^:::[ \t]+(\S+)/gm;
 
 // Индекс якорей языка: путь объекта — из директивы и канонический — → его адреса на сайте.
-const indexes = new Map<string, Map<string, { sdk: Sdk; url: string }[]>>();
+const indexes = new Map<string, Map<string, { sdk: DocSet; url: string }[]>>();
 
 const refIndex = (lang: string) => {
   let index = indexes.get(lang);
   if (index) return index;
   index = new Map();
-  for (const sdk of sdks) {
+  for (const sdk of docSets) {
     for (const page of docsPages(sdk)) {
       const source = readFileSync(`${docsRoot(sdk)}/${page.file}`, 'utf8');
       for (const [, ident] of source.matchAll(DIRECTIVE)) {
@@ -90,8 +90,8 @@ const refIndex = (lang: string) => {
   return index;
 };
 
-/** Адрес объекта API: сначала в справочнике того же SDK, потом у соседей. */
-export const resolveRef = (lang: string, from: Sdk, path: string) => {
+/** Адрес объекта API: сначала в справочнике того же набора, потом у соседей. */
+export const resolveRef = (lang: string, from: DocSet, path: string) => {
   const list = refIndex(lang).get(path);
   return (list?.find((e) => e.sdk === from) ?? list?.[0])?.url;
 };
@@ -106,7 +106,7 @@ export type ApiLabels = {
 
 export type ApiContext = {
   lang: string;
-  sdk: Sdk;
+  sdk: DocSet;
   /** Опции рендера страницы — для описаний из docstring-ов. */
   md: RenderOptions;
   labels: ApiLabels;

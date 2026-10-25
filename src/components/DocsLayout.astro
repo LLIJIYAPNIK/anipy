@@ -1,9 +1,9 @@
 ---
-// Каркас документации SDK: шапка, слева знак SDK и меню страниц (nav mkdocs.yml),
-// справа «На этой странице». Обзор SDK и страницы документации — в слоте.
+// Каркас документации: шапка, слева знак SDK (у общей документации — её название) и меню
+// страниц (nav mkdocs.yml), справа «На этой странице». Обзор SDK и страницы документации — в слоте.
 import Base from '../layouts/Base.astro';
 import DocsHeader from './DocsHeader.astro';
-import type { Sdk } from '../data/sdks';
+import { isSdk, usedBy, type DocSet } from '../data/sdks';
 import { docsNav, docUrl, type DocPage } from '../lib/mkdocs';
 import { loadCoverage } from '../lib/coverage';
 import { t, type Lang } from '../i18n';
@@ -12,7 +12,8 @@ export type TocItem = { id: string; text: string; depth?: 2 | 3 };
 
 interface Props {
   lang: Lang;
-  sdk: Sdk;
+  /** SDK или общая документация нескольких SDK (ядро). */
+  set: DocSet;
   title: string;
   description: string;
   toc: TocItem[];
@@ -20,35 +21,50 @@ interface Props {
   page?: DocPage;
 }
 
-const { lang, sdk, title, description, toc, page } = Astro.props;
+const { lang, set, title, description, toc, page } = Astro.props;
+const sdk = isSdk(set) ? set : undefined;
 
-// Первая группа меню — «Документация»: обзор и страницы верхнего уровня nav;
+// Первая группа меню SDK — «Документация»: обзор и страницы верхнего уровня nav;
 // остальные группы nav — следом, в том же порядке; у страниц верхнего уровня после группы
 // с названием своего заголовка в nav нет — и в меню они без него. Примеры и изменения — в «Ещё».
-const nav = docsNav(sdk);
-const pages = (items: (typeof nav)[number]['items']) => items.flatMap((it) => ('page' in it ? [it.page] : []));
+// Раздел общей документации (ядро) ведёт на её страницы. У самой общей документации обзора нет,
+// вместо «Ещё» — SDK, которые её используют.
+const nav = docsNav(set);
+const links = (items: (typeof nav)[number]['items']) =>
+  items.flatMap((it) => ('page' in it ? [{ href: docUrl(lang, it.set ?? set, it.page), title: it.page.title, current: it.page === page }] : []));
 const [first, ...rest] = nav;
 const groups = [
-  { title: t(lang, 'nav.docs'), overview: true, pages: first && !first.title ? pages(first.items) : [] },
-  ...(first && first.title ? [first] : []).concat(rest).map((g) => ({ title: g.title, overview: false, pages: pages(g.items) })),
-].filter((g) => g.overview || g.pages.length);
+  ...(sdk ? [{ title: t(lang, 'nav.docs'), overview: true, links: first && !first.title ? links(first.items) : [] }] : []),
+  ...(first && (first.title || !sdk) ? [first] : []).concat(rest).map((g) => ({ title: g.title, overview: false, links: links(g.items) })),
+].filter((g) => g.overview || g.links.length);
 
-const coverage = loadCoverage(sdk);
-const changelogHref = `/${lang}/changelog/#${sdk.package}`;
+const coverage = sdk && loadCoverage(sdk);
+const users = isSdk(set) ? [] : usedBy(set);
 ---
 
 <Base lang={lang} title={title} description={description}>
-  <DocsHeader lang={lang} sdk={sdk} page={page?.title} />
+  <DocsHeader lang={lang} set={set} page={page?.title} />
 
   <div class="layout">
     <aside class="side">
-      <div class="mark" aria-hidden="true" data-parallax>
-        <span class="num">{sdk.number}</span>
-        <span class="mark-title">
-          <span class="jp" lang="ja" data-draw>{sdk.kana}</span>
-          <span class="mark-label">{sdk.label[lang]}</span>
-        </span>
-      </div>
+      {
+        sdk ? (
+          <div class="mark" aria-hidden="true" data-parallax>
+            <span class="num">{sdk.number}</span>
+            <span class="mark-title">
+              <span class="jp" lang="ja" data-draw>
+                {sdk.kana}
+              </span>
+              <span class="mark-label">{sdk.label[lang]}</span>
+            </span>
+          </div>
+        ) : (
+          <div class="mark-shared" aria-hidden="true" data-rise>
+            <span class="shared-name">{(set as { id: string }).id}</span>
+            <span class="meta">{set.label[lang].toUpperCase()}</span>
+          </div>
+        )
+      }
       <button class="menu-toggle meta" type="button" aria-expanded="false" aria-controls="docs-menu">
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.1" fill="none"></path></svg>
         {t(lang, 'docs.menu').toUpperCase()}
@@ -71,24 +87,37 @@ const changelogHref = `/${lang}/changelog/#${sdk.package}`;
             <div class="group">
               {g.title && <span class="meta group-title">{g.title.toUpperCase()}</span>}
               {g.overview && (
-                <a href={docUrl(lang, sdk)} aria-current={page ? undefined : 'page'}>
+                <a href={docUrl(lang, set)} aria-current={page ? undefined : 'page'}>
                   {t(lang, 'docs.overview')}
                 </a>
               )}
-              {g.pages.map((p) => (
-                <a href={docUrl(lang, sdk, p)} aria-current={p === page ? 'page' : undefined}>
-                  {p.title}
+              {g.links.map((l) => (
+                <a href={l.href} aria-current={l.current ? 'page' : undefined}>
+                  {l.title}
                 </a>
               ))}
             </div>
           ))
         }
-        <div class="group">
-          <span class="meta group-title">{t(lang, 'docs.more').toUpperCase()}</span>
-          {coverage && <a class="more" href={`/${lang}/coverage/#${sdk.package}`}>{t(lang, 'nav.coverage')}</a>}
-          {sdk.examples && <a class="more" href={`/${lang}/examples/#${sdk.package}`}>{t(lang, 'nav.examples')}</a>}
-          <a class="more" href={changelogHref}>{t(lang, 'docs.changelog')}</a>
-        </div>
+        {
+          sdk ? (
+            <div class="group">
+              <span class="meta group-title">{t(lang, 'docs.more').toUpperCase()}</span>
+              {coverage && <a class="more" href={`/${lang}/coverage/#${sdk.package}`}>{t(lang, 'nav.coverage')}</a>}
+              {sdk.examples && <a class="more" href={`/${lang}/examples/#${sdk.package}`}>{t(lang, 'nav.examples')}</a>}
+              <a class="more" href={`/${lang}/changelog/#${sdk.package}`}>{t(lang, 'docs.changelog')}</a>
+            </div>
+          ) : (
+            <div class="group">
+              <span class="meta group-title">{t(lang, 'docs.usedIn').toUpperCase()}</span>
+              {users.map((u) => (
+                <a class="more" href={docUrl(lang, u)}>
+                  {u.package}
+                </a>
+              ))}
+            </div>
+          )
+        }
       </nav>
     </aside>
 
@@ -223,6 +252,20 @@ const changelogHref = `/${lang}/changelog/#${sdk.package}`;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     padding-top: 0.25rem;
+  }
+  .mark-shared {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .shared-name {
+    font-family: var(--font-mono);
+    font-size: 1.375rem;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+  }
+  .mark-shared .meta {
+    letter-spacing: 0.22em;
   }
   .menu-toggle {
     display: none;

@@ -33,7 +33,7 @@ const coverage = loadCoverage(sdk);
 const coverageHref = `/${lang}/coverage/#${sdk.package}`;
 ---
 
-<DocsLayout lang={lang} sdk={sdk} title={`${sdk.package} — ANIPY`} description={sdk.description[lang]} toc={toc}>
+<DocsLayout lang={lang} set={sdk} title={`${sdk.package} — ANIPY`} description={sdk.description[lang]} toc={toc}>
   <article>
     <div id="overview" class="meta overline" data-rise style="--i: 0">{sdk.number} — {sdk.label[lang].toUpperCase()} · {sdk.platform.toUpperCase()}</div>
     <h1 data-rise style="--i: 1">{sdk.package}</h1>

@@ -2,17 +2,20 @@
 import Logo from './Logo.astro';
 import LangSwitch from './LangSwitch.astro';
 import GithubButton from './GithubButton.astro';
-import { sdks, type Sdk } from '../data/sdks';
+import { docSetKey, isSdk, sdks, type DocSet } from '../data/sdks';
 import { t, type Lang } from '../i18n';
 
 interface Props {
   lang: Lang;
-  sdk: Sdk;
+  /** SDK или общая документация (ядро) — тогда ни одна вкладка SDK не выделена. */
+  set: DocSet;
   /** Название страницы документации — последним звеном цепочки. */
   page?: string;
 }
 
-const { lang, sdk, page } = Astro.props;
+const { lang, set, page } = Astro.props;
+const key = docSetKey(set);
+const hash = isSdk(set) ? `#${set.package}` : '';
 ---
 
 <header class="docs-header">
@@ -24,12 +27,12 @@ const { lang, sdk, page } = Astro.props;
       {
         page ? (
           <>
-            <a href={`/${lang}/docs/${sdk.package}/`}>{sdk.package.toUpperCase()}</a>
+            <a href={`/${lang}/docs/${key}/`}>{key.toUpperCase()}</a>
             <span aria-hidden="true">/</span>
             <span aria-current="page">{page.toUpperCase()}</span>
           </>
         ) : (
-          <span aria-current="page">{sdk.package.toUpperCase()}</span>
+          <span aria-current="page">{key.toUpperCase()}</span>
         )
       }
     </nav>
@@ -38,7 +41,7 @@ const { lang, sdk, page } = Astro.props;
     <nav class="tabs" aria-label="SDK">
       {
         sdks.map((s) => (
-          <a href={`/${lang}/docs/${s.package}/`} aria-current={s === sdk ? 'page' : undefined}>
+          <a href={`/${lang}/docs/${s.package}/`} aria-current={s === set ? 'page' : undefined}>
             <span class="num">{s.number}</span>
             <span class="jp" lang="ja">
               {s.kana}
@@ -48,12 +51,12 @@ const { lang, sdk, page } = Astro.props;
       }
     </nav>
     <nav class="site-nav" aria-label={t(lang, 'nav.site')}>
-      <a href={`/${lang}/examples/#${sdk.package}`}>{t(lang, 'nav.examples').toUpperCase()}</a>
-      <a href={`/${lang}/changelog/#${sdk.package}`}>{t(lang, 'nav.changelog').toUpperCase()}</a>
+      <a href={`/${lang}/examples/${hash}`}>{t(lang, 'nav.examples').toUpperCase()}</a>
+      <a href={`/${lang}/changelog/${hash}`}>{t(lang, 'nav.changelog').toUpperCase()}</a>
       <a href={`/${lang}/about/`}>{t(lang, 'nav.about').toUpperCase()}</a>
     </nav>
     <div class="lang"><LangSwitch lang={lang} /></div>
-    <span class="gh"><GithubButton href={sdk.github} label={`${sdk.package} ${t(lang, 'nav.onGithub')}`} /></span>
+    <span class="gh"><GithubButton href={set.github} label={`${key} ${t(lang, 'nav.onGithub')}`} /></span>
   </div>
 </header>
 

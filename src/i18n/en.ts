@@ -129,6 +129,7 @@ export const en: Record<keyof typeof ru, string> = {
   'docs.prev': 'Previous',
   'docs.copyCode': 'Copy the code',
   'docs.pages': 'Documentation pages',
+  'docs.usedIn': 'Used in',
   'api.parameters': 'Parameters',
   'api.otherParameters': 'Other parameters',
   'api.attributes': 'Attributes',
