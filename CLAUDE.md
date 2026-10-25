@@ -60,7 +60,7 @@ src/
   lib/markdown.ts       # markdown документации → HTML в стиле сайта (admonition, snippets, якоря как у mkdocs)
   lib/api-reference.ts  # справочник API: директивы `::: путь` → объекты из .sdk/api, ссылки autorefs и аннотаций
   lib/changelog.ts      # разбирает CHANGELOG.md (Keep a Changelog от git-cliff)
-  lib/coverage.ts       # покрытие API: endpoints.md + openapi.json (lib/openapi.ts) + docstring-и (lib/pydoc.ts)
+  lib/coverage.ts       # покрытие API: endpoints.md + openapi.json (lib/openapi.ts) + методы SDK из данных griffe (lib/api-reference.ts)
   data/coverage-groups.ts # тег операции → группа таблицы покрытия, подписи групп из макета
   lib/examples.ts       # примеры из examples/ репозиториев SDK; пометка «аккаунт» — по чтению переменных окружения
   data/examples.ts      # названия примеров RU/EN и строка API из макета; без записи — из имени файла и README

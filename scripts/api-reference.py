@@ -226,6 +226,85 @@ def dump(obj, opts, repo: Path, ident: str, explicit=None, depth=0):
     return item
 
 
+def unquote(text):
+    return (text or "").replace("``", "").replace("**", "")
+
+
+def call_doc(fn):
+    """Метод для таблицы покрытия API (#72): сигнатура как в исходнике (без self) и docstring по разделам."""
+    parts, star = [], False
+    params = list(fn.parameters)
+    if params and params[0].name in ("self", "cls"):
+        params = params[1:]
+    for p in params:
+        kind = p.kind.value if p.kind else ""
+        if kind == "keyword-only" and not star:
+            parts.append("*")
+            star = True
+        prefix = {"variadic positional": "*", "variadic keyword": "**"}.get(kind, "")
+        star = star or prefix == "*"
+        text = prefix + p.name
+        if p.annotation is not None:
+            text += f": {p.annotation}"
+        # У *args/**kwargs griffe отдаёт значение по умолчанию () / {} — в исходнике его нет.
+        if p.default is not None and not prefix:
+            text += f" = {p.default}" if p.annotation is not None else f"={p.default}"
+        parts.append(text)
+    sig = f"{'async ' if 'async' in fn.labels else ''}def {fn.name}({', '.join(parts)})"
+    if fn.returns is not None:
+        sig += f" -> {fn.returns}"
+
+    summary, args, returns, raises, example = "", [], None, [], None
+    for section in fn.docstring.parsed if fn.docstring else []:
+        kind = section.kind.value
+        if kind == "text" and not summary:
+            summary = " ".join(unquote(section.value).split("\n\n")[0].split())
+        elif kind == "parameters":
+            args = [[p.name, " ".join(unquote(p.description).split())] for p in section.value]
+        elif kind == "returns":
+            returns = " ".join(unquote(" ".join(r.description for r in section.value)).split()) or None
+        elif kind == "raises":
+            raises = [[str(r.annotation), " ".join(unquote(r.description).split())] for r in section.value]
+        elif kind == "admonition" and section.title.lower().startswith("example") and example is None:
+            text = section.value.description
+            fenced = re.search(r"```\w*\n(.*?)```", text, re.S)
+            example = (fenced.group(1) if fenced else text).strip() or None
+        elif kind == "examples" and example is None:
+            example = "\n".join(v for _, v in section.value).strip() or None
+    return {"sig": sig, "summary": summary, "args": args, "returns": returns, "raises": raises, "example": example}
+
+
+def classes(loader, packages):
+    """Классы пакетов: ресурсы-атрибуты (`self.x = Y(...)`) и публичные методы, с унаследованными."""
+    out = {}
+
+    def walk(module):
+        for member in module.members.values():
+            if member.is_alias:
+                continue
+            if member.is_module:
+                walk(member)
+            elif member.is_class:
+                attrs, methods = {}, {}
+                for name, m in member.all_members.items():
+                    try:
+                        target = m.final_target if m.is_alias else m
+                    except Exception:  # noqa: BLE001 — член из сторонней библиотеки
+                        continue
+                    if target.is_attribute and isinstance(target.value, griffe.ExprCall):
+                        try:
+                            attrs[name] = target.value.function.canonical_path
+                        except Exception:  # noqa: BLE001
+                            pass
+                    elif target.is_function and not name.startswith("_"):
+                        methods[name] = call_doc(target)
+                out[member.path] = {"name": member.name, "attrs": attrs, "methods": methods}
+
+    for package in packages:
+        walk(loader.modules_collection[package])
+    return out
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for config_path in sorted(SDK.glob("*/mkdocs.yml")):
@@ -262,7 +341,9 @@ def main():
             objects[ident] = item
 
         out = OUT / f"{repo.name}.json"
-        out.write_text(json.dumps({"directives": objects}, ensure_ascii=False), encoding="utf-8")
+        documented = sorted({ident.split(".")[0] for ident in found})
+        data = {"directives": objects, "classes": classes(loader, documented)}
+        out.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
         print(f"api    {repo.name}: {len(objects)} objects -> {out}")
 
 

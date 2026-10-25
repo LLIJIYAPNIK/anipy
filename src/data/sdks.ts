@@ -24,7 +24,7 @@ export type Sdk = {
   /** Справочник API из макета; без него раздела нет. */
   api?: { name: string; description: Text }[];
   /** Пути внутри каталога SDK для страницы покрытия API; без них — заглушка. */
-  coverage?: { api: string; endpoints: string; spec: string; source: string };
+  coverage?: { api: string; endpoints: string; spec: string };
   /** Заметки об API, когда публичной спецификации нет. */
   apiNotes?: string;
   /** Папка примеров от корня репозитория; общую папку делят по подстроке в имени файла. */
@@ -66,7 +66,7 @@ export const sdks: readonly Sdk[] = [
       { name: 'client.releases.get(alias)', description: { ru: 'Релиз по его алиасу.', en: 'A release by its alias.' } },
       { name: 'client.episodes.get(id)', description: { ru: 'Эпизод с HLS-ссылками (hls_1080, hls_720).', en: 'An episode with HLS links (hls_1080, hls_720).' } },
     ],
-    coverage: { api: 'AniLibria API v1', endpoints: 'docs/endpoints.md', spec: 'spec/openapi.json', source: 'src/aniliberty' },
+    coverage: { api: 'AniLibria API v1', endpoints: 'docs/endpoints.md', spec: 'spec/openapi.json' },
     examples: { dir: 'examples' },
     video: 'anime',
   },
