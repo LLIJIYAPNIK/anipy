@@ -19,6 +19,10 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      # uv запускает griffe для справочника API (scripts/api-reference.py в npm run sync).
+      - uses: astral-sh/setup-uv@v10
+        with:
+          version: 0.13.5
       - run: npm ci
       # Контент сайта — из репозиториев SDK: без них check и build не проверяют ничего.
       - run: npm run sync
@@ -38,6 +42,7 @@ jobs:
           sleep 2
           curl -fsS -o /dev/null http://127.0.0.1:8081/ru/
           curl -fsS -o /dev/null http://127.0.0.1:8081/en/coverage/
+          curl -fsS -o /dev/null http://127.0.0.1:8081/en/docs/py-aniliberty/reference/
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8081/)" = 302
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8081/no-such-page/)" = 404
           curl -s http://127.0.0.1:8081/no-such-page/ | grep -q 'ANIPY'

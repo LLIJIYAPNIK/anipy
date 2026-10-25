@@ -1,8 +1,12 @@
 # Образ anipy.ru: сборка статики и раздача её nginx. HTTPS — у nginx на хосте.
 
 FROM node:22.22-alpine AS build
-# git нужен npm run sync: он клонирует репозитории SDK в .sdk/.
-RUN apk add --no-cache git
+# git нужен npm run sync: он клонирует репозитории SDK в .sdk/; python3 и uv — для
+# справочника API (scripts/api-reference.py запускает griffe).
+RUN apk add --no-cache git python3
+COPY --from=ghcr.io/astral-sh/uv:0.13.5 /uv /usr/local/bin/uv
+# Python — системный из apk: uv не скачивает свой.
+ENV UV_PYTHON_DOWNLOADS=never
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
