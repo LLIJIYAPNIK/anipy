@@ -29,6 +29,9 @@ export type Sdk = {
   apiNotes?: string;
   /** Папка примеров от корня репозитория; общую папку делят по подстроке в имени файла. */
   examples?: { dir: string; only?: string; skip?: string };
+  /** Разделы верхнего уровня `nav` из mkdocs.yml репозитория, которые относятся к этому SDK;
+   *  без поля — весь `nav`. Нужно, когда один репозиторий документирует несколько пакетов. */
+  docsNav?: string[];
   /** Фоновое видео раскрытой панели на главной: имя файлов в public/media/
    *  (<name>.webm, <name>.mp4, <name>-poster.webp — scripts/prepare-video.mjs). */
   video?: string;
@@ -83,6 +86,7 @@ export const sdks: readonly Sdk[] = [
     repo: { url: 'https://github.com/LLIJIYAPNIK/libsocial-sdk.git', dir: 'libsocial-sdk', path: 'packages/ranobelib' },
     apiNotes: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/blob/main/docs/api-notes.md',
     examples: { dir: 'examples', skip: 'mangalib' },
+    docsNav: ['ranobelib', 'API notes'],
     phrases: 'ranobe-phrases',
   },
   {
@@ -101,6 +105,7 @@ export const sdks: readonly Sdk[] = [
     repo: { url: 'https://github.com/LLIJIYAPNIK/libsocial-sdk.git', dir: 'libsocial-sdk', path: 'packages/mangalib' },
     apiNotes: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/blob/main/docs/api-notes.md',
     examples: { dir: 'examples', only: 'mangalib' },
+    docsNav: ['mangalib', 'API notes'],
     covers: 'manga',
   },
 ];
@@ -113,6 +118,9 @@ export const sdkDir = (sdk: Sdk) => ['.sdk', sdk.repo.dir, sdk.repo.path].filter
 /** Файл SDK на GitHub по пути внутри каталога пакета. */
 export const repoFileUrl = (sdk: Sdk, file: string) =>
   `${sdk.repo.url.replace(/\.git$/, '')}/blob/main/${[sdk.repo.path, file].filter(Boolean).join('/')}`;
+
+/** Файл на GitHub по пути от корня репозитория SDK. */
+export const repoRootFileUrl = (sdk: Sdk, file: string) => `${sdk.repo.url.replace(/\.git$/, '')}/blob/main/${file}`;
 
 /** CHANGELOG.md SDK на GitHub. */
 export const changelogUrl = (sdk: Sdk) => repoFileUrl(sdk, 'CHANGELOG.md');
