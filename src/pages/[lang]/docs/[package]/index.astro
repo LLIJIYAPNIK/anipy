@@ -1,7 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
-import Base from '../../../../layouts/Base.astro';
-import DocsHeader from '../../../../components/DocsHeader.astro';
+import DocsLayout from '../../../../components/DocsLayout.astro';
 import CodeBlock from '../../../../components/CodeBlock.astro';
 import { sdks, sdkDir, type Sdk } from '../../../../data/sdks';
 import { readmeParts } from '../../../../lib/readme';
@@ -17,12 +16,13 @@ const lang = Astro.params.lang as Lang;
 const docs = await getCollection('sdkDocs', (e) => e.filePath === `${sdkDir(sdk)}/README.md`);
 const readme = docs[0]?.body ? readmeParts(docs[0].body) : undefined;
 
-const toc: { id: string; key: Key }[] = [
+const sections: { id: string; key: Key }[] = [
   { id: 'overview', key: 'docs.overview' },
   ...(readme?.install.length ? [{ id: 'install', key: 'docs.install' as Key }] : []),
   ...(readme?.quickstart ? [{ id: 'quickstart', key: 'docs.quickstart' as Key }] : []),
   ...(sdk.api ? [{ id: 'api', key: 'docs.api' as Key }] : []),
 ];
+const toc = sections.map((s) => ({ id: s.id, text: t(lang, s.key) }));
 
 // Следующий SDK по кругу — «Далее», остальные — «Также в коллекции».
 const index = sdks.indexOf(sdk);
@@ -33,284 +33,109 @@ const coverage = loadCoverage(sdk);
 const coverageHref = `/${lang}/coverage/#${sdk.package}`;
 ---
 
-<Base lang={lang} title={`${sdk.package} — ANIPY`} description={sdk.description[lang]}>
-  <DocsHeader lang={lang} sdk={sdk} />
+<DocsLayout lang={lang} sdk={sdk} title={`${sdk.package} — ANIPY`} description={sdk.description[lang]} toc={toc}>
+  <article>
+    <div id="overview" class="meta overline" data-rise style="--i: 0">{sdk.number} — {sdk.label[lang].toUpperCase()} · {sdk.platform.toUpperCase()}</div>
+    <h1 data-rise style="--i: 1">{sdk.package}</h1>
+    <p class="description" data-rise style="--i: 2">{sdk.description[lang]}</p>
+    <div class="facts meta" data-rise style="--i: 3">
+      <span>PYTHON {sdk.python}</span>
+      <span>{t(lang, 'docs.license').toUpperCase()} {sdk.license}</span>
+      <a href={`https://pypi.org/project/${sdk.package}/`} target="_blank" rel="noopener noreferrer">PYPI ↗</a>
+      <a href={sdk.github} target="_blank" rel="noopener noreferrer">GITHUB ↗</a>
+      <a href={changelogHref}>{t(lang, 'docs.changelog').toUpperCase()}</a>
+    </div>
 
-  <div class="layout">
-    <aside class="side">
-      <div class="mark" aria-hidden="true" data-parallax>
-        <span class="num">{sdk.number}</span>
-        <span class="mark-title">
-          <span class="jp" lang="ja" data-draw>{sdk.kana}</span>
-          <span class="mark-label">{sdk.label[lang]}</span>
-        </span>
-      </div>
-      <nav class="side-nav" aria-label={t(lang, 'nav.docs')}>
-        <div class="group">
-          <span class="meta group-title">{t(lang, 'docs.onPage').toUpperCase()}</span>
-          {toc.map((item) => <a href={`#${item.id}`} data-toc={item.id}>{t(lang, item.key)}</a>)}
-        </div>
-        <div class="group">
-          <span class="meta group-title">{t(lang, 'docs.more').toUpperCase()}</span>
-          {coverage && <a class="more" href={coverageHref}>{t(lang, 'nav.coverage')}</a>}
-          {sdk.examples && <a class="more" href={`/${lang}/examples/#${sdk.package}`}>{t(lang, 'nav.examples')}</a>}
-          <a class="more" href={changelogHref}>{t(lang, 'docs.changelog')}</a>
-        </div>
-      </nav>
-    </aside>
+    <div class="divider"></div>
 
-    <main class="main">
-      <article>
-        <div id="overview" class="meta overline" data-rise style="--i: 0">{sdk.number} — {sdk.label[lang].toUpperCase()} · {sdk.platform.toUpperCase()}</div>
-        <h1 data-rise style="--i: 1">{sdk.package}</h1>
-        <p class="description" data-rise style="--i: 2">{sdk.description[lang]}</p>
-        <div class="facts meta" data-rise style="--i: 3">
-          <span>PYTHON {sdk.python}</span>
-          <span>{t(lang, 'docs.license').toUpperCase()} {sdk.license}</span>
-          <a href={`https://pypi.org/project/${sdk.package}/`} target="_blank" rel="noopener noreferrer">PYPI ↗</a>
-          <a href={sdk.github} target="_blank" rel="noopener noreferrer">GITHUB ↗</a>
-          <a href={changelogHref}>{t(lang, 'docs.changelog').toUpperCase()}</a>
-        </div>
+    {!readme && <p class="meta">{t(lang, 'docs.missing')}</p>}
 
-        <div class="divider"></div>
-
-        {!readme && <p class="meta">{t(lang, 'docs.missing')}</p>}
-
-        {
-          readme?.install.length ? (
-            <section data-reveal>
-              <h2 id="install">{t(lang, 'docs.install')}</h2>
-              <p class="text">{t(lang, 'docs.installText')}</p>
-              <CodeBlock lang={lang} caption="SHELL" copyLabel={t(lang, 'docs.copyInstall')} copy={readme.install.join('\n')}>
-                {readme.install.map((cmd, i) => (
-                  <>
-                    {i > 0 && <span class="prompt">{'# ' + orLabel + '\n'}</span>}
-                    <span class="prompt">$ </span>
-                    {cmd + '\n'}
-                  </>
-                ))}
-              </CodeBlock>
-            </section>
-          ) : null
-        }
-
-        {
-          readme?.quickstart && (
-            <section data-reveal>
-              <h2 id="quickstart">{t(lang, 'docs.quickstart')}</h2>
-              {sdk.quickstartIntro && <p class="text">{sdk.quickstartIntro[lang]}</p>}
-              <CodeBlock lang={lang} caption="PYTHON" copyLabel={t(lang, 'docs.copyQuickstart')} copy={readme.quickstart} code={readme.quickstart} />
-            </section>
-          )
-        }
-
-        {
-          sdk.api && (
-            <section data-reveal>
-              <h2 id="api">{t(lang, 'docs.api')}</h2>
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th scope="col">{t(lang, 'docs.name').toUpperCase()}</th>
-                      <th scope="col">{t(lang, 'docs.description').toUpperCase()}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sdk.api.map((row) => (
-                      <tr>
-                        <td class="api-name">{row.name}</td>
-                        <td>{row.description[lang]}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {coverage && (
-                <a class="coverage-card" href={coverageHref}>
-                  <span class="coverage-text">
-                    <span class="meta">{t(lang, 'nav.coverage').toUpperCase()}</span>
-                    <span class="coverage-title">{t(lang, 'coverage.card').replace('{n}', String(coverage.stats.total))}</span>
-                  </span>
-                  <span class="coverage-arrow" aria-hidden="true">→</span>
-                </a>
-              )}
-            </section>
-          )
-        }
-
-        <nav class="others" data-reveal aria-label={t(lang, 'docs.otherSdks')}>
-          {
-            others.map((other, i) => (
-              <a href={`/${lang}/docs/${other.package}/`}>
-                <span class="other-text">
-                  <span class="meta">{t(lang, i === 0 ? 'docs.next' : 'docs.also').toUpperCase()}</span>
-                  <span class="other-package">{other.package}</span>
-                </span>
-                <span class="other-mark">
-                  <span class="num">{other.number}</span>
-                  <span class="jp" lang="ja">
-                    {other.kana}
-                  </span>
-                </span>
-              </a>
-            ))
-          }
-        </nav>
-      </article>
-    </main>
-
-    <aside class="toc" aria-label={t(lang, 'docs.onPage')}>
-      <div class="toc-inner">
-        <div class="meta group-title">{t(lang, 'docs.onPage').toUpperCase()}</div>
-        <ul>
-          {
-            toc.map((item) => (
-              <li>
-                <a href={`#${item.id}`} data-toc={item.id}>
-                  <span class="dash" aria-hidden="true" />
-                  {t(lang, item.key)}
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-    </aside>
-  </div>
-</Base>
-
-<script>
-  // Подсветка текущего раздела в обеих навигациях.
-  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc]')];
-  const ids = [...new Set(links.map((a) => a.dataset.toc!))];
-  const setCurrent = (id: string) => {
-    for (const a of links) a.setAttribute('aria-current', a.dataset.toc === id ? 'location' : 'false');
-  };
-
-  // Пока идёт прокрутка после клика, подсветка остаётся на выбранном пункте:
-  // короткие нижние разделы не доезжают до верха, и иначе она «перескакивала» бы.
-  let locked = false;
-  let unlockTimer = 0;
-  const unlock = () => {
-    locked = false;
-    clearTimeout(unlockTimer);
-  };
-  window.addEventListener('scrollend', unlock);
-  // Ручная прокрутка колесом, тачем или клавишами отменяет блокировку сразу.
-  for (const type of ['wheel', 'touchstart', 'keydown']) window.addEventListener(type, unlock, { passive: true });
-
-  for (const a of links) {
-    a.addEventListener('click', (event) => {
-      const target = document.getElementById(a.dataset.toc!);
-      if (!target) return;
-      event.preventDefault();
-      setCurrent(a.dataset.toc!);
-      locked = true;
-      // Запасной выход для браузеров без scrollend и для случая, когда прокручивать некуда.
-      clearTimeout(unlockTimer);
-      unlockTimer = window.setTimeout(unlock, 1200);
-      target.scrollIntoView({ block: 'start' });
-      history.replaceState(null, '', `#${a.dataset.toc}`);
-    });
-  }
-
-  // Текущий раздел — последний, чей заголовок прошёл верхнюю треть окна.
-  // В самом низу страницы, куда пользователь докрутил сам, — последний раздел.
-  const update = () => {
-    if (locked) return;
-    let current = ids[0];
-    for (const id of ids) {
-      const el = document.getElementById(id);
-      if (el && el.getBoundingClientRect().top < window.innerHeight / 3) current = id;
+    {
+      readme?.install.length ? (
+        <section data-reveal>
+          <h2 id="install">{t(lang, 'docs.install')}</h2>
+          <p class="text">{t(lang, 'docs.installText')}</p>
+          <CodeBlock lang={lang} caption="SHELL" copyLabel={t(lang, 'docs.copyInstall')} copy={readme.install.join('\n')}>
+            {readme.install.map((cmd, i) => (
+              <>
+                {i > 0 && <span class="prompt">{'# ' + orLabel + '\n'}</span>}
+                <span class="prompt">$ </span>
+                {cmd + '\n'}
+              </>
+            ))}
+          </CodeBlock>
+        </section>
+      ) : null
     }
-    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) current = ids[ids.length - 1];
-    setCurrent(current);
-  };
-  update();
-  window.addEventListener('scroll', update, { passive: true });
-</script>
+
+    {
+      readme?.quickstart && (
+        <section data-reveal>
+          <h2 id="quickstart">{t(lang, 'docs.quickstart')}</h2>
+          {sdk.quickstartIntro && <p class="text">{sdk.quickstartIntro[lang]}</p>}
+          <CodeBlock lang={lang} caption="PYTHON" copyLabel={t(lang, 'docs.copyQuickstart')} copy={readme.quickstart} code={readme.quickstart} />
+        </section>
+      )
+    }
+
+    {
+      sdk.api && (
+        <section data-reveal>
+          <h2 id="api">{t(lang, 'docs.api')}</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">{t(lang, 'docs.name').toUpperCase()}</th>
+                  <th scope="col">{t(lang, 'docs.description').toUpperCase()}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sdk.api.map((row) => (
+                  <tr>
+                    <td class="api-name">{row.name}</td>
+                    <td>{row.description[lang]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {coverage && (
+            <a class="coverage-card" href={coverageHref}>
+              <span class="coverage-text">
+                <span class="meta">{t(lang, 'nav.coverage').toUpperCase()}</span>
+                <span class="coverage-title">{t(lang, 'coverage.card').replace('{n}', String(coverage.stats.total))}</span>
+              </span>
+              <span class="coverage-arrow" aria-hidden="true">→</span>
+            </a>
+          )}
+        </section>
+      )
+    }
+
+    <nav class="others" data-reveal aria-label={t(lang, 'docs.otherSdks')}>
+      {
+        others.map((other, i) => (
+          <a href={`/${lang}/docs/${other.package}/`}>
+            <span class="other-text">
+              <span class="meta">{t(lang, i === 0 ? 'docs.next' : 'docs.also').toUpperCase()}</span>
+              <span class="other-package">{other.package}</span>
+            </span>
+            <span class="other-mark">
+              <span class="num">{other.number}</span>
+              <span class="jp" lang="ja">
+                {other.kana}
+              </span>
+            </span>
+          </a>
+        ))
+      }
+    </nav>
+  </article>
+</DocsLayout>
 
 <style>
-  .layout {
-    max-width: 90rem;
-    margin: 0 auto;
-    display: flex;
-    flex-wrap: wrap;
-  }
-
-  /* Левая колонка */
-  .side {
-    flex: 1 1 15rem;
-    max-width: 18.75rem;
-    padding: 3rem 2rem 3rem var(--page-gutter);
-    border-right: 1px solid var(--divider);
-    display: flex;
-    flex-direction: column;
-    gap: 2.75rem;
-  }
-  .mark {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-  .mark .num {
-    font-weight: 300;
-    font-size: 4rem;
-    line-height: 0.8;
-    letter-spacing: 0.04em;
-  }
-  .mark-title {
-    display: flex;
-    flex-direction: row-reverse;
-    align-items: flex-start;
-    gap: 0.375rem;
-  }
-  .mark-title .jp {
-    writing-mode: vertical-rl;
-    font-size: var(--jp-size-docs);
-  }
-  .mark-label {
-    writing-mode: vertical-rl;
-    font-size: 0.6875rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    padding-top: 0.25rem;
-  }
-  .side-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 1.75rem;
-  }
-  .group {
-    display: flex;
-    flex-direction: column;
-  }
-  .group-title {
-    letter-spacing: 0.22em;
-    padding-bottom: 0.5rem;
-  }
-  .side-nav a {
-    font-size: 1.125rem;
-    padding: 0.5rem 0 0.5rem 0.875rem;
-    border-left: 1px solid var(--divider);
-    color: var(--secondary);
-  }
-  .side-nav a[aria-current='location'] {
-    border-left-color: var(--ink);
-    color: var(--ink);
-  }
-  .side-nav a.more {
-    color: var(--tertiary);
-  }
-
-  /* Контент */
-  .main {
-    flex: 999 1 35rem;
-    min-width: 0;
-    padding: 4.5rem 4.5rem 6rem;
-  }
+  /* Контент; каркас — components/DocsLayout.astro */
   article {
     max-width: 45rem;
   }
@@ -464,62 +289,7 @@ const coverageHref = `/${lang}/coverage/#${sdk.package}`;
     font-size: 1.5rem;
   }
 
-  /* Правая колонка */
-  .toc {
-    flex: 1 1 12.5rem;
-    max-width: 15rem;
-    padding: 4.75rem 2.5rem 3rem 0;
-  }
-  .toc-inner {
-    position: sticky;
-    top: 2rem;
-  }
-  .toc ul {
-    list-style: none;
-    margin: 1rem 0 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    font-size: 1rem;
-  }
-  .toc a {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.4375rem 0;
-    color: var(--secondary);
-  }
-  .dash {
-    width: 0;
-    height: 1px;
-    background: var(--ink);
-    transition: width var(--toc-duration) var(--ease-out);
-  }
-  .toc a[aria-current='location'] {
-    color: var(--ink);
-  }
-  .toc a[aria-current='location'] .dash {
-    width: 1.25rem;
-  }
-
-  @media (max-width: 1100px) {
-    .toc {
-      display: none;
-    }
-  }
   @media (max-width: 767px) {
-    .side {
-      max-width: none;
-      border-right: 0;
-      border-bottom: 1px solid var(--divider);
-      padding: 2rem var(--page-gutter);
-    }
-    .side-nav {
-      display: none;
-    }
-    .main {
-      padding: 2.5rem var(--page-gutter) 4.5rem;
-    }
     h1 {
       font-size: 2rem;
     }

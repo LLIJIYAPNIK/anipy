@@ -8,9 +8,11 @@ import { t, type Lang } from '../i18n';
 interface Props {
   lang: Lang;
   sdk: Sdk;
+  /** Название страницы документации — последним звеном цепочки. */
+  page?: string;
 }
 
-const { lang, sdk } = Astro.props;
+const { lang, sdk, page } = Astro.props;
 ---
 
 <header class="docs-header">
@@ -19,7 +21,17 @@ const { lang, sdk } = Astro.props;
     <nav class="crumbs meta" aria-label={t(lang, 'nav.breadcrumb')}>
       <a href={`/${lang}/`}>{t(lang, 'nav.docs.short').toUpperCase()}</a>
       <span aria-hidden="true">/</span>
-      <span aria-current="page">{sdk.package.toUpperCase()}</span>
+      {
+        page ? (
+          <>
+            <a href={`/${lang}/docs/${sdk.package}/`}>{sdk.package.toUpperCase()}</a>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{page.toUpperCase()}</span>
+          </>
+        ) : (
+          <span aria-current="page">{sdk.package.toUpperCase()}</span>
+        )
+      }
     </nav>
   </div>
   <div class="right">
