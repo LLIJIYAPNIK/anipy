@@ -40,10 +40,6 @@ const readNav = (sdk: Sdk): Nav => {
   return config?.nav ?? [];
 };
 
-// Справочник API собирается директивами mkdocstrings (`::: aniliberty.X`); пока их нечем
-// отрисовать (#64), такие страницы в меню не попадают.
-const needsReference = (source: string) => /^:::\s/m.test(source);
-
 const entry = (item: Nav[number]): [string | undefined, string | Nav] =>
   typeof item === 'string' ? [undefined, item] : (Object.entries(item)[0] as [string, string | Nav]);
 
@@ -53,7 +49,7 @@ const navItem = (sdk: Sdk, title: string | undefined, file: string): DocNavItem 
   if (site === 'examples' && !sdk.examples) return undefined;
   if (site) return { title: title ?? file, site };
   const path = `${docsRoot(sdk)}/${file}`;
-  if (!existsSync(path) || needsReference(readFileSync(path, 'utf8'))) return undefined;
+  if (!existsSync(path)) return undefined;
   const slug = file.replace(/\.md$/, '').replace(/(^|\/)index$/, '');
   return { page: { slug, file, title: title ?? slug } };
 };
