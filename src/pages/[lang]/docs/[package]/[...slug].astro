@@ -73,8 +73,9 @@ const next = pages[index + 1] && { href: docUrl(lang, set, pages[index + 1]), ti
 ---
 
 <DocsLayout lang={lang} set={set} title={heading === key ? `${key} — ANIPY` : `${heading} — ${key} — ANIPY`} description={set.description[lang]} toc={doc.toc} page={page}>
-  <article>
-    <div class="meta overline" data-rise style="--i: 0">
+  <!-- Поиск (#68): индексируется только текст статьи, фильтр — набор документации. -->
+  <article data-pagefind-body data-pagefind-filter={`sdk:${key}`}>
+    <div class="meta overline" data-rise style="--i: 0" data-pagefind-ignore>
       {isSdk(set) && `${set.number} — `}
       {key.toUpperCase()}{group && ` · ${group.toUpperCase()}`}
     </div>
@@ -82,7 +83,7 @@ const next = pages[index + 1] && { href: docUrl(lang, set, pages[index + 1]), ti
     {
       // Документация SDK только на английском (#67): на русской версии — пометка и исходный файл.
       lang !== 'en' && (
-        <p class="original" data-rise style="--i: 2">
+        <p class="original" data-rise style="--i: 2" data-pagefind-ignore>
           {t(lang, 'docs.original')}{' '}
           <a href={repoRootFileUrl(set, `docs/${page.file}`)} target="_blank" rel="noopener noreferrer">
             {t(lang, 'docs.sourceFile')} ↗
@@ -92,7 +93,7 @@ const next = pages[index + 1] && { href: docUrl(lang, set, pages[index + 1]), ti
     }
     <div class="prose" data-rise style="--i: 3" set:html={doc.html} />
 
-    <nav class="pager" aria-label={t(lang, 'docs.pages')}>
+    <nav class="pager" aria-label={t(lang, 'docs.pages')} data-pagefind-ignore>
       {
         prev && (
           <a class="prev" href={prev.href}>
@@ -339,14 +340,17 @@ const next = pages[index + 1] && { href: docUrl(lang, set, pages[index + 1]), ti
     padding-top: 0;
     border-top: 0;
   }
-  .prose :global(.api-head) {
-    margin: 0;
-    padding: 0;
-    border: 0;
+  .prose :global(.api-title) {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem 0.875rem;
+  }
+  .prose :global(.api-head) {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
   }
   .prose :global(.api-head .api-name) {
     padding: 0;
