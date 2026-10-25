@@ -3,7 +3,7 @@
 // страниц (nav mkdocs.yml), справа «На этой странице». Обзор SDK и страницы документации — в слоте.
 import Base from '../layouts/Base.astro';
 import DocsHeader from './DocsHeader.astro';
-import { isSdk, usedBy, type DocSet } from '../data/sdks';
+import { docSetKey, isSdk, usedBy, type DocSet } from '../data/sdks';
 import { docsNav, docUrl, type DocPage } from '../lib/mkdocs';
 import { loadCoverage } from '../lib/coverage';
 import { t, type Lang } from '../i18n';
@@ -42,7 +42,7 @@ const coverage = sdk && loadCoverage(sdk);
 const users = isSdk(set) ? [] : usedBy(set);
 ---
 
-<Base lang={lang} title={title} description={description}>
+<Base lang={lang} title={title} description={description} image={`/og/${docSetKey(set)}.png`}>
   <DocsHeader lang={lang} set={set} page={page?.title} />
 
   <div class="layout">
