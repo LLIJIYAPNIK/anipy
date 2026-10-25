@@ -45,7 +45,7 @@
 
 ## Стек
 
-Astro, статическая сборка (`output: 'static'`), Node ≥ 22.18, npm. JS на клиенте только там, где без него нельзя: таблица покрытия API — единственный остров (Preact). Остальное — HTML и CSS.
+Astro, статическая сборка (`output: 'static'`), Node ≥ 22.18, npm. Python — только при сборке, для справочника API: `uv` (в CI — `astral-sh/setup-uv`, в Docker — бинарь из образа uv и системный python3). JS на клиенте только там, где без него нельзя: таблица покрытия API — единственный остров (Preact). Остальное — HTML и CSS.
 
 ## Структура
 
@@ -58,6 +58,7 @@ src/
   lib/readme.ts         # достаёт из README SDK разделы Installation и Quickstart
   lib/mkdocs.ts         # nav из mkdocs.yml репозитория SDK → меню и страницы документации
   lib/markdown.ts       # markdown документации → HTML в стиле сайта (admonition, snippets, якоря как у mkdocs)
+  lib/api-reference.ts  # справочник API: директивы `::: путь` → объекты из .sdk/api, ссылки autorefs и аннотаций
   lib/changelog.ts      # разбирает CHANGELOG.md (Keep a Changelog от git-cliff)
   lib/coverage.ts       # покрытие API: endpoints.md + openapi.json (lib/openapi.ts) + docstring-и (lib/pydoc.ts)
   data/coverage-groups.ts # тег операции → группа таблицы покрытия, подписи групп из макета
@@ -73,7 +74,8 @@ src/
   pages/data/coverage/  # статический JSON подробностей операций для таблицы покрытия
   pages/404.astro, 500.astro # одна страница на весь сайт, оба языка (components/ErrorPage.astro); 500.html отдаёт сервер
 public/logo.png         # знак ア в энсо из макета; на «О проекте» надпись под ним — текстом
-scripts/sync-sdk.mjs    # клонирует репозитории из sdks.ts в .sdk/
+scripts/sync-sdk.mjs    # клонирует репозитории из sdks.ts в .sdk/ и запускает api-reference.py
+scripts/api-reference.py # griffe (через uv): директивы mkdocstrings из docs/ → .sdk/api/<репозиторий>.json
 scripts/prepare-video.mjs # видео для панели: node scripts/prepare-video.mjs <исходник> <имя> [--poster <сек>]; ffmpeg из PATH или $FFMPEG
 scripts/prepare-covers.py # обложки для стены: uv run scripts/prepare-covers.py [<имя>] [--count 50]
 scripts/prepare-phrases.py # фразы для строки чтения: uv run scripts/prepare-phrases.py
@@ -82,6 +84,7 @@ public/media/           # видео, постеры и обложки пане�
 ```
 
 - Страницы документации — ровно `nav` из `mkdocs.yml` репозитория SDK (`lib/mkdocs.ts`); `docsNav` в `sdks.ts` — какие разделы `nav` относятся к SDK, когда репозиторий документирует несколько пакетов. `index.md`, `changelog.md`, `examples.md` заменяют свои страницы сайта (обзор, изменения, примеры). Текст не переводится и не правится — правки идут в репозиторий SDK.
+- Справочник API — директивы mkdocstrings из страниц SDK. Данные извлекает `scripts/api-reference.py` тем же griffe, что у mkdocstrings, с опциями из `mkdocs.yml` и самой директивы (`members`, `inherited_members`, `show_root_heading`, `show_bases`, `merge_init_into_class`, порядок членов); сайт только рисует. Объект, которого нет, роняет sync и сборку — как `mkdocs build --strict`. Версия griffe — в шапке скрипта, держать как у SDK.
 - Ссылки в документации: на другие `.md` — на страницы сайта, якоря — те же, что у mkdocs (`slugify` в `lib/markdown.ts`); на прочие файлы репозитория — на GitHub.
 - Покрытие API есть у SDK с полем `coverage` в `sdks.ts`; у остальных вкладка показывает заглушку со ссылкой на `apiNotes`.
 - Контент SDK читается только из `.sdk/`: README и CHANGELOG — через коллекции, страницы `docs/` — через `fs` в `lib/mkdocs.ts`, `openapi.json` и исходники Python — через `fs` в `lib/coverage.ts`. Схема коллекции падает, если в репозитории SDK пропало нужное поле: это правильно, обходить не надо.
@@ -99,7 +102,7 @@ public/media/           # видео, постеры и обложки пане�
 
 ```bash
 npm install
-npm run sync      # клонирует/обновляет репозитории SDK в .sdk/
+npm run sync      # клонирует/обновляет репозитории SDK в .sdk/ и собирает справочник API (нужен uv)
 npm run dev       # dev-сервер
 npm run check     # astro check — типы и схемы контента
 npm run build     # статическая сборка в dist/
