@@ -81,11 +81,15 @@ scripts/prepare-video.mjs # видео для панели: node scripts/prepare
 scripts/prepare-covers.py # обложки для стены: uv run scripts/prepare-covers.py [<имя>] [--count 50]
 scripts/prepare-phrases.py # фразы для строки чтения: uv run scripts/prepare-phrases.py
 public/media/           # видео, постеры и обложки панелей
+scripts/prepare-og.mjs  # картинки превью ссылок: node scripts/prepare-og.mjs → public/og/<ключ>.png
+public/og/              # превью ссылок 1200×630: anipy.png и по одной на SDK и общую документацию
+public/robots.txt       # всё открыто, кроме /data/; ссылка на sitemap-index.xml
 .sdk/                   # клоны репозиториев SDK для сборки, в git не попадает
 ```
 
 - Страницы документации — ровно `nav` из `mkdocs.yml` репозитория SDK (`lib/mkdocs.ts`); `docsNav` в `sdks.ts` — какие разделы `nav` относятся к SDK, когда репозиторий документирует несколько пакетов. Документация, общая для нескольких SDK одного репозитория (ядро `libsocial-core`), — запись в `sharedDocs` (`sdks.ts`): свой адрес `/docs/<id>/…`, без знака SDK и вкладки; в меню SDK, чей `docsNav` называет её раздел, — ссылки на эти страницы, а не копии. `index.md`, `changelog.md`, `examples.md` заменяют свои страницы сайта (обзор, изменения, примеры). Текст не переводится и не правится — правки идут в репозиторий SDK; на русской версии над текстом — пометка об английском оригинале со ссылкой на исходный файл.
 - Справочник API — директивы mkdocstrings из страниц SDK. Данные извлекает `scripts/api-reference.py` тем же griffe, что у mkdocstrings, с опциями из `mkdocs.yml` и самой директивы (`members`, `inherited_members`, `show_root_heading`, `show_bases`, `merge_init_into_class`, порядок членов); сайт только рисует. Объект, которого нет, роняет sync и сборку — как `mkdocs build --strict`. Версия griffe — в шапке скрипта, держать как у SDK.
+- SEO (`layouts/Base.astro`): у каждой страницы `canonical`, пара `hreflang` ru/en с `x-default` на русскую, OG/Twitter-карточка; страницы ошибок — `noindex`. Карта сайта — `@astrojs/sitemap` (только `/ru/…` и `/en/…`). Картинка превью — `public/og/<ключ>.png` набора документации, иначе `anipy.png`; новый SDK — перезапустить `scripts/prepare-og.mjs` (без русского и английского текста — одна картинка на оба языка).
 - Поиск — Pagefind: `npm run build` после `astro build` строит индекс в `dist/pagefind/` (свой на каждый язык). Индексируется только `<article data-pagefind-body>` страниц документации с фильтром `data-pagefind-filter="sdk:<ключ>"`; служебное внутри статьи (кнопки, «Назад/Далее», плашки API) — `data-pagefind-ignore`. В `npm run dev` индекса нет — поиск проверять через `npm run build` и `npm run preview`.
 - Якорь объекта API — на его заголовке (Pagefind ссылается на разделы по заголовкам с id), у корня без заголовка — на `<section>`.
 - Ссылки в документации: на другие `.md` — на страницы сайта, якоря — те же, что у mkdocs (`slugify` в `lib/markdown.ts`); на прочие файлы репозитория — на GitHub.
