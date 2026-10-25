@@ -2,8 +2,8 @@
 // Повторяет то, что включено в mkdocs.yml репозиториев: GFM-таблицы, admonition (`!!! note "…"`),
 // pymdownx.snippets (`--8<-- "файл"`), toc (якоря заголовков как у mkdocs — ссылки вида
 // `api-notes.md#раздел` из документации продолжают работать) и autorefs (`[текст][aniliberty.X]`).
-import { existsSync, readFileSync } from 'node:fs';
-import { posix } from 'node:path';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
+import { isAbsolute, posix, relative, resolve, sep } from 'node:path';
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkGfm from 'remark-gfm';
@@ -34,11 +34,24 @@ export type RenderedDoc = { title?: string; html: string; toc: TocEntry[] };
 
 const markdown = () => unified().use(remarkParse).use(remarkGfm);
 
-/** pymdownx.snippets: строка `--8<-- "путь"` заменяется файлом от корня репозитория. */
+/** Лежит ли путь внутри каталога (сам каталог — тоже внутри). */
+const isInside = (dir: string, path: string) => {
+  const rel = relative(dir, path);
+  return rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel);
+};
+
+/** pymdownx.snippets: строка `--8<-- "путь"` заменяется файлом от корня репозитория.
+ *  Путь, выходящий за корень (`../`, абсолютный, симлинк наружу), роняет сборку: иначе markdown
+ *  из репозитория SDK мог бы вставить в сайт любой файл с машины, где идёт сборка. */
 const expandSnippets = (md: string, root: string) =>
   md.replace(/^--8<--\s+"([^"]+)"\s*$/gm, (line, path: string) => {
-    const file = `${root}/${path}`;
-    return existsSync(file) ? readFileSync(file, 'utf8').replace(/\r\n/g, '\n') : line;
+    const base = resolve(root);
+    const file = resolve(base, path);
+    const outside = () => new Error(`Snippet "${path}" is outside the SDK repository ${root}`);
+    if (!isInside(base, file)) throw outside();
+    if (!existsSync(file)) return line;
+    if (!isInside(realpathSync(base), realpathSync(file))) throw outside();
+    return readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
   });
 
 // admonition: после строки `!!! тип "заголовок"` — пустая строка, чтобы тело с отступом в 4 пробела
