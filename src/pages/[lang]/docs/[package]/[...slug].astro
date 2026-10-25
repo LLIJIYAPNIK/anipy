@@ -79,7 +79,18 @@ const next = pages[index + 1] && { href: docUrl(lang, set, pages[index + 1]), ti
       {key.toUpperCase()}{group && ` · ${group.toUpperCase()}`}
     </div>
     <h1 data-rise style="--i: 1">{heading}</h1>
-    <div class="prose" data-rise style="--i: 2" set:html={doc.html} />
+    {
+      // Документация SDK только на английском (#67): на русской версии — пометка и исходный файл.
+      lang !== 'en' && (
+        <p class="original" data-rise style="--i: 2">
+          {t(lang, 'docs.original')}{' '}
+          <a href={repoRootFileUrl(set, `docs/${page.file}`)} target="_blank" rel="noopener noreferrer">
+            {t(lang, 'docs.sourceFile')} ↗
+          </a>
+        </p>
+      )
+    }
+    <div class="prose" data-rise style="--i: 3" set:html={doc.html} />
 
     <nav class="pager" aria-label={t(lang, 'docs.pages')}>
       {
@@ -119,6 +130,26 @@ const next = pages[index + 1] && { href: docUrl(lang, set, pages[index + 1]), ti
     font-size: 3.25rem;
     line-height: 1.1;
     letter-spacing: -0.005em;
+  }
+
+  .original {
+    margin: 1.5rem 0 0;
+    padding-left: 1rem;
+    border-left: 1px solid var(--rule);
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--secondary);
+  }
+  .original a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--rule);
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color var(--hover-duration) var(--ease-out);
+  }
+  .original a:hover {
+    text-decoration-color: var(--ink);
   }
 
   /* Текст документа: разметка приходит из lib/markdown.ts, поэтому :global внутри .prose. */

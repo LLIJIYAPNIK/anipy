@@ -128,6 +128,8 @@ export const ru = {
   'docs.copyCode': 'Скопировать код',
   'docs.pages': 'Страницы документации',
   'docs.usedIn': 'Используется в',
+  'docs.original': 'Текст страницы — оригинал из репозитория SDK, на английском.',
+  'docs.sourceFile': 'Исходный файл',
   'api.parameters': 'Параметры',
   'api.otherParameters': 'Другие параметры',
   'api.attributes': 'Атрибуты',
