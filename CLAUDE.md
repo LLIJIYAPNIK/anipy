@@ -64,7 +64,7 @@ src/
   lib/coverage.ts       # покрытие API: endpoints.md + openapi.json (lib/openapi.ts) + методы SDK из данных griffe (lib/api-reference.ts)
   data/coverage-groups.ts # тег операции → группа таблицы покрытия, подписи групп из макета
   lib/examples.ts       # примеры из examples/ репозиториев SDK; пометка «аккаунт» — по чтению переменных окружения
-  data/examples.ts      # названия примеров RU/EN и строка API из макета; без записи — из имени файла и README
+  data/examples.ts      # названия примеров RU/EN и строка API (ключ — `<репозиторий>/<путь от корня>`); без записи — из имени файла и README
   components/CoverageTable.tsx # единственный остров (Preact); подробности грузит из /data/coverage/<package>.json
   scripts/tabs.ts       # вкладки по SDK на Changelog и Coverage
   lib/grayscale-theme.ts# тема подсветки кода; дублирует цвета tokens.css (Shiki красит инлайном)
@@ -96,6 +96,7 @@ public/robots.txt       # всё открыто, кроме /data/; ссылка
 - Поиск — Pagefind: `npm run build` после `astro build` строит индекс в `dist/pagefind/` (свой на каждый язык). Индексируется только `<article data-pagefind-body>` страниц документации с фильтром `data-pagefind-filter="sdk:<ключ>"`; служебное внутри статьи (кнопки, «Назад/Далее», плашки API) — `data-pagefind-ignore`. В `npm run dev` индекса нет — поиск проверять через `npm run build` и `npm run preview`.
 - Якорь объекта API — на его заголовке (Pagefind ссылается на разделы по заголовкам с id), у корня без заголовка — на `<section>`.
 - Ссылки в документации: на другие `.md` — на страницы сайта, якоря — те же, что у mkdocs (`slugify` в `lib/markdown.ts`); на прочие файлы репозитория — на GitHub.
+- Примеры — поле `examples.dir` у SDK и у общей документации (папка от корня репозитория: в libsocial-sdk у каждого пакета своя, `examples/ranobelib`, `examples/mangalib`, `examples/core`). На странице примеров у каждого набора своя вкладка, команда запуска — путь от корня репозитория. Новый пример без записи в `data/examples.ts` получит название из имени файла на обоих языках — дописать запись.
 - Покрытие API есть у SDK с полем `coverage` в `sdks.ts`; у остальных вкладка показывает заглушку со ссылкой на `apiNotes`.
 - Контент SDK читается только из `.sdk/`: README и CHANGELOG — через коллекции, страницы `docs/` — через `fs` в `lib/mkdocs.ts`, `openapi.json` и исходники Python — через `fs` в `lib/coverage.ts`. Схема коллекции падает, если в репозитории SDK пропало нужное поле: это правильно, обходить не надо.
 - Цвета и размеры в компонентах — только через переменные из `tokens.css`, без литералов.
