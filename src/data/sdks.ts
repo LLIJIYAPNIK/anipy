@@ -27,8 +27,8 @@ export type Sdk = {
   coverage?: { api: string; endpoints: string; spec: string };
   /** Заметки об API, когда публичной спецификации нет. */
   apiNotes?: string;
-  /** Папка примеров от корня репозитория; общую папку делят по подстроке в имени файла. */
-  examples?: { dir: string; only?: string; skip?: string };
+  /** Папка примеров от корня репозитория. */
+  examples?: { dir: string };
   /** Разделы верхнего уровня `nav` из mkdocs.yml репозитория, которые относятся к этому SDK;
    *  без поля — весь `nav`. Нужно, когда один репозиторий документирует несколько пакетов. */
   docsNav?: string[];
@@ -85,7 +85,7 @@ export const sdks: readonly Sdk[] = [
     github: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/tree/main/packages/ranobelib',
     repo: { url: 'https://github.com/LLIJIYAPNIK/libsocial-sdk.git', dir: 'libsocial-sdk', path: 'packages/ranobelib' },
     apiNotes: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/blob/main/docs/api-notes.md',
-    examples: { dir: 'examples', skip: 'mangalib' },
+    examples: { dir: 'examples/ranobelib' },
     docsNav: ['ranobelib', 'libsocial-core', 'API notes'],
     phrases: 'ranobe-phrases',
   },
@@ -104,7 +104,7 @@ export const sdks: readonly Sdk[] = [
     github: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/tree/main/packages/mangalib',
     repo: { url: 'https://github.com/LLIJIYAPNIK/libsocial-sdk.git', dir: 'libsocial-sdk', path: 'packages/mangalib' },
     apiNotes: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/blob/main/docs/api-notes.md',
-    examples: { dir: 'examples', only: 'mangalib' },
+    examples: { dir: 'examples/mangalib' },
     docsNav: ['mangalib', 'libsocial-core', 'API notes'],
     covers: 'manga',
   },
@@ -121,6 +121,8 @@ export type SharedDocs = {
   repo: Sdk['repo'];
   /** Раздел верхнего уровня `nav` из mkdocs.yml. */
   section: string;
+  /** Папка примеров от корня репозитория. */
+  examples?: { dir: string };
 };
 
 export const sharedDocs: readonly SharedDocs[] = [
@@ -134,6 +136,7 @@ export const sharedDocs: readonly SharedDocs[] = [
     github: 'https://github.com/LLIJIYAPNIK/libsocial-sdk/tree/main/packages/core',
     repo: { url: 'https://github.com/LLIJIYAPNIK/libsocial-sdk.git', dir: 'libsocial-sdk', path: 'packages/core' },
     section: 'libsocial-core',
+    examples: { dir: 'examples/core' },
   },
 ];
 

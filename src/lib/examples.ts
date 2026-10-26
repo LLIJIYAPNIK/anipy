@@ -1,13 +1,16 @@
 // Примеры SDK из папки examples/ клона в .sdk/: список файлов, пометка «аккаунт»
 // и строка API из README примеров, если её нет в src/data/examples.ts.
+// Набор — SDK коллекции или общая документация (ядро), у каждого своя папка.
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Sdk } from '../data/sdks';
+import type { DocSet } from '../data/sdks';
 import { exampleCopy } from '../data/examples';
 
 export type Example = {
-  sdk: Sdk;
+  set: DocSet;
   file: string;
+  /** Путь от корня репозитория — для команды запуска: `examples/ranobelib/01_title_metadata.py`. */
+  path: string;
   num: string;
   title: { ru: string; en: string };
   api: string;
@@ -39,10 +42,10 @@ const fromFileName = (file: string) => {
   return words.charAt(0).toUpperCase() + words.slice(1);
 };
 
-export const loadExamples = (sdk: Sdk): Example[] => {
-  if (!sdk.examples) return [];
-  const { dir, only, skip } = sdk.examples;
-  const base = join('.sdk', sdk.repo.dir, dir);
+export const loadExamples = (set: DocSet): Example[] => {
+  if (!set.examples) return [];
+  const { dir } = set.examples;
+  const base = join('.sdk', set.repo.dir, dir);
   let files: string[];
   try {
     files = readdirSync(base).filter((f) => /^\d+_.+\.py$/.test(f));
@@ -50,22 +53,21 @@ export const loadExamples = (sdk: Sdk): Example[] => {
     return [];
   }
   const features = readmeFeatures(read(join(base, 'README.md')));
-  const web = sdk.repo.url.replace(/\.git$/, '');
+  const web = set.repo.url.replace(/\.git$/, '');
 
-  return files
-    .filter((f) => (!only || f.includes(only)) && (!skip || !f.includes(skip)))
-    .sort()
-    .map((file) => {
-      const copy = exampleCopy[`${sdk.repo.dir}/${file}`];
-      const name = fromFileName(file);
-      return {
-        sdk,
-        file,
-        num: file.slice(0, 2),
-        title: copy?.title ?? { ru: name, en: name },
-        api: copy?.api ?? features[file] ?? '',
-        account: /os\.environ|getenv\(/.test(read(join(base, file))),
-        href: `${web}/blob/main/${dir}/${file}`,
-      };
-    });
+  return files.sort().map((file) => {
+    const path = `${dir}/${file}`;
+    const copy = exampleCopy[`${set.repo.dir}/${path}`];
+    const name = fromFileName(file);
+    return {
+      set,
+      file,
+      path,
+      num: file.slice(0, 2),
+      title: copy?.title ?? { ru: name, en: name },
+      api: copy?.api ?? features[file] ?? '',
+      account: /os\.environ|getenv\(/.test(read(join(base, file))),
+      href: `${web}/blob/main/${path}`,
+    };
+  });
 };

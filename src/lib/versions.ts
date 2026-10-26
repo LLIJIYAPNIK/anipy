@@ -1,5 +1,5 @@
 // Последняя версия SDK (#70): с PyPI при сборке, без сети — из CHANGELOG.md репозитория.
-// Сайт пересобирается по repository_dispatch: sdk-release, так что версия обновляется сама.
+// Версия обновляется при каждой сборке; после релиза SDK сайт пересобирают вручную (#80).
 import { existsSync, readFileSync } from 'node:fs';
 import { sdkDir, type Sdk } from '../data/sdks';
 import { parseChangelog } from './changelog';

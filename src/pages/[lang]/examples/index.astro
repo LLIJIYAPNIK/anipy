@@ -1,7 +1,8 @@
 ---
 import Base from '../../../layouts/Base.astro';
 import SiteHeader from '../../../components/SiteHeader.astro';
-import { sdks } from '../../../data/sdks';
+import { docSetKey, isSdk } from '../../../data/sdks';
+import { docSets } from '../../../lib/mkdocs';
 import { loadExamples } from '../../../lib/examples';
 import { langs, t, type Key, type Lang } from '../../../i18n';
 
@@ -9,20 +10,21 @@ export const getStaticPaths = () => langs.map((lang) => ({ params: { lang } }));
 
 const lang = Astro.params.lang as Lang;
 
-const examples = sdks.flatMap((sdk) => loadExamples(sdk));
+// Примеры SDK и общей документации (ядро) — у каждого набора своя папка в репозитории.
+const examples = docSets.flatMap((set) => loadExamples(set));
 const plural = new Intl.PluralRules(lang).select(examples.length);
 const eyebrow = `${t(lang, 'examples.eyebrow')} · ${examples.length} ${t(lang, `examples.script.${plural}` as Key)}`;
 
-// Вкладки: «Все» и SDK, у которых есть примеры.
+// Вкладки: «Все», SDK и общая документация, у которых есть примеры; у ядра нет номера и каны.
 const tabs = [
   { id: 'all', number: '', kana: '', label: t(lang, 'examples.all'), count: examples.length },
-  ...sdks
-    .map((sdk) => ({
-      id: sdk.package,
-      number: sdk.number,
-      kana: sdk.kana,
-      label: sdk.package.replace(/-python-sdk$/, ''),
-      count: examples.filter((e) => e.sdk === sdk).length,
+  ...docSets
+    .map((set) => ({
+      id: docSetKey(set),
+      number: isSdk(set) ? set.number : '',
+      kana: isSdk(set) ? set.kana : '',
+      label: docSetKey(set).replace(/-python-sdk$/, ''),
+      count: examples.filter((e) => e.set === set).length,
     }))
     .filter((tab) => tab.count > 0),
 ];
@@ -65,13 +67,13 @@ const tabs = [
     <ul id="examples-list" role="tabpanel" class="list">
       {
         examples.map((e, i) => (
-          <li data-package={e.sdk.package} data-reveal style={`--i: ${i % 2}`}>
+          <li data-package={docSetKey(e.set)} data-reveal style={`--i: ${i % 2}`}>
             <span class="num-big" aria-hidden="true">
               {e.num}
             </span>
             <div class="body">
               <div class="item-meta">
-                <span>{e.sdk.package}</span>
+                <span>{docSetKey(e.set)}</span>
                 {e.account && <span class="account">{t(lang, 'examples.account').toUpperCase()}</span>}
               </div>
               <h2>{e.title[lang]}</h2>
@@ -81,14 +83,14 @@ const tabs = [
                   type="button"
                   class="run"
                   aria-label={`${t(lang, 'examples.copyLabel')} ${e.file}`}
-                  data-command={`python examples/${e.file}`}
+                  data-command={`python ${e.path}`}
                   data-done={t(lang, 'examples.copied')}
                 >
                   <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
                     <rect x="5" y="5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.1" />
                     <path d="M11 5V2H2v9h3" fill="none" stroke="currentColor" stroke-width="1.1" />
                   </svg>
-                  <span aria-live="polite">$ python examples/{e.file}</span>
+                  <span aria-live="polite">$ python {e.path}</span>
                 </button>
                 <a class="source" href={e.href} target="_blank" rel="noopener noreferrer" aria-label={`${e.file} ${t(lang, 'nav.onGithub')}`}>
                   {t(lang, 'examples.source').toUpperCase()} ↗

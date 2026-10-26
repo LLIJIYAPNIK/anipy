@@ -118,6 +118,16 @@ const users = isSdk(set) ? [] : usedBy(set);
             </div>
           )
         }
+        {
+          !sdk && set.examples && (
+            <div class="group">
+              <span class="meta group-title">{t(lang, 'docs.more').toUpperCase()}</span>
+              <a class="more" href={`/${lang}/examples/#${docSetKey(set)}`}>
+                {t(lang, 'nav.examples')}
+              </a>
+            </div>
+          )
+        }
       </nav>
     </aside>
 
